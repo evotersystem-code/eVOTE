@@ -56,7 +56,7 @@ app.use(helmet({
 const allowedOrigins = [
     'http://localhost:5000',
     'http://127.0.0.1:5000',
-    // Add your production domain here
+    'https://evote-production-1902.up.railway.app'
 ];
 
 app.use(cors({
