@@ -54,6 +54,8 @@ try {
 // Nodemailer setup
 console.log("Initializing Nodemailer with user:", process.env.EMAIL_USER ? process.env.EMAIL_USER : "NOT FOUND");
 
+const dns = require('node:dns');
+
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
@@ -65,7 +67,11 @@ const transporter = nodemailer.createTransport({
     tls: {
         rejectUnauthorized: false
     },
-    family: 4, // Explicitly force IPv4 to avoid ENETUNREACH on IPv6-only cloud routes
+    lookup: (hostname, options, callback) => {
+        // Force DNS resolution to IPv4
+        dns.lookup(hostname, { family: 4 }, callback);
+    },
+    family: 4, // Explicitly force IPv4
     connectionTimeout: 15000, // 15 seconds
     greetingTimeout: 15000,
     socketTimeout: 30000,
