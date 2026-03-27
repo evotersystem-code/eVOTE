@@ -21,7 +21,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 dotenv.config();
 
 // CRITICAL SECURITY CHECK: Ensure essential keys are present
-const requiredEnv = ['JWT_SECRET', 'MONGO_URI', 'DB_ENCRYPTION_KEY', 'DB_SIGNING_KEY', 'EMAIL_USER', 'EMAIL_PASS'];
+const requiredEnv = ['JWT_SECRET', 'MONGO_URI', 'DB_ENCRYPTION_KEY', 'DB_SIGNING_KEY'];
 const missing = requiredEnv.filter(k => !process.env[k]);
 if (missing.length > 0) {
     console.error(`❌ CRITICAL ERROR: Missing required environment variables: ${missing.join(', ')}`);
