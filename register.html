@@ -936,8 +936,7 @@
       return Object.values(checks).every(Boolean);
     }
 
-    let registrationData = {};
-    let otpStep = 0; // 0: None, 1: Email, 2: WhatsApp
+
 
     async function startRegistration() {
       const fields = ['name', 'email', 'phone', 'password', 'dob', 'rollNumber', 'prn', 'classSelect', 'gender', 'address'];
@@ -968,13 +967,13 @@
         faceDescriptor: faceDescriptor
       };
 
-      await sendStepOTP('email');
+      await sendStepOTP('whatsapp');
     }
 
     async function sendStepOTP(type) {
         lastOtpType = type;
-        const identifier = type === 'email' ? registrationData.email : registrationData.phone;
-      statusDiv.innerText = `Sending ${type} OTP...`;
+        const identifier = registrationData.phone;
+      statusDiv.innerText = `Sending WhatsApp OTP...`;
       try {
         const res = await fetch('/api/auth/send-otp', {
           method: 'POST',
@@ -986,8 +985,7 @@
           body: JSON.stringify({ identifier, type })
         });
         if (res.ok) {
-          otpStep = type === 'email' ? 1 : 2;
-          document.getElementById('otpTitle').innerText = `Step ${otpStep}: Verify ${type.toUpperCase()}`;
+          document.getElementById('otpTitle').innerText = `Verify WhatsApp Number`;
           document.getElementById('otpMsg').innerText = `Code sent to ${identifier}`;
            document.getElementById('otpOverlay').style.display = 'flex';
            document.getElementById('otpInput').value = '';
@@ -1000,7 +998,7 @@
 
     async function processOTP() {
       const code = document.getElementById('otpInput').value;
-      const identifier = otpStep === 1 ? registrationData.email : registrationData.phone;
+      const identifier = registrationData.phone;
 
       try {
         const res = await fetch('/api/auth/verify-otp', {
@@ -1014,13 +1012,8 @@
         });
         const data = await res.json();
         if (data.verified) {
-          if (otpStep === 1) {
-            closeOTP();
-            await sendStepOTP('whatsapp');
-          } else {
-            closeOTP();
-            await finalizeRegistration();
-          }
+          closeOTP();
+          await finalizeRegistration();
         } else { alert("Wrong OTP"); }
       } catch (err) { alert("Verification Error"); }
     }

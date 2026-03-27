@@ -299,16 +299,7 @@
     </div>
   </main>
 
-  <!-- OTP Choice Modal -->
-  <div class="otp-modal" id="otpChoiceModal">
-    <div class="modal-card">
-        <h3 style="color: var(--gray-800); margin-bottom: 15px;">2FA Verification</h3>
-        <p style="color: var(--gray-700); font-size: 13px; margin-bottom: 20px;">Select your preferred OTP method:</p>
-        <button id="sendEmailBtn" class="choice-btn">📧 Email Address</button>
-        <button id="sendWhatsappBtn" class="choice-btn">💬 WhatsApp Number</button>
-        <button id="closeChoiceModalBtn" class="face-btn" style="background: transparent; color: var(--gray-700); margin-top: 15px; border: 1px solid var(--gray-200);">Go Back</button>
-    </div>
-  </div>
+
 
   <!-- OTP Verification Modal -->
   <div class="otp-modal" id="otpVerifyModal">
@@ -352,7 +343,7 @@
     let faceDescriptor = null;
     let tempLoginData = {};
     let resendTimerInterval = null;
-    let lastOtpType = 'email';
+    let lastOtpType = 'whatsapp';
 
     const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
 
@@ -499,9 +490,9 @@
             }
 
             if (res.status === 200 && data.faceVerified) {
-                // Face match successful, now do mandatory 2FA choice
-                document.getElementById('otpChoiceModal').style.display = 'flex';
-                status.innerText = "Identity Verified. Proceed with 2FA.";
+                // Face match successful, now automatically send WhatsApp OTP
+                sendLoginOTP('whatsapp');
+                status.innerText = "Identity Verified. Sending 2FA Code...";
             } else if (res.ok) {
                 handleLoginSuccess(data);
             } else {
@@ -574,7 +565,6 @@
             });
 
             if (res.ok) {
-                document.getElementById('otpChoiceModal').style.display = 'none';
                 document.getElementById('otpVerifyModal').style.display = 'flex';
                 document.getElementById('otpMsg').innerText = `Enter the code sent to your ${type}:`;
                 tempLoginData.otpIdentifier = identifier;
@@ -658,17 +648,11 @@
         
         const captureBtn = document.getElementById("captureFaceBtn");
         const loginBtn = document.getElementById("loginBtn");
-        const sendEmailBtn = document.getElementById("sendEmailBtn");
-        const sendWhatsappBtn = document.getElementById("sendWhatsappBtn");
-        const closeChoiceBtn = document.getElementById("closeChoiceModalBtn");
         const confirmLoginBtn = document.getElementById("confirmLoginBtn");
         const setPwdBtn = document.getElementById("setPwdBtn");
 
         if (captureBtn) captureBtn.addEventListener("click", captureFace);
         if (loginBtn) loginBtn.addEventListener("click", login);
-        if (sendEmailBtn) sendEmailBtn.addEventListener("click", () => sendLoginOTP('email'));
-        if (sendWhatsappBtn) sendWhatsappBtn.addEventListener("click", () => sendLoginOTP('whatsapp'));
-        if (closeChoiceBtn) closeChoiceBtn.addEventListener("click", closeLoginOTP);
         if (confirmLoginBtn) confirmLoginBtn.addEventListener("click", verifyAndLogin);
         if (setPwdBtn) setPwdBtn.addEventListener("click", changePassword);
         
