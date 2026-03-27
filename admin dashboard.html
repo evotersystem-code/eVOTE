@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Authority Dashboard | eVoter System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { display: flex; flex-direction: row; height: 100vh; overflow: hidden; font-family: 'Inter', sans-serif; background: #f8fafc; }
+
+    .sidebar { width: 240px; min-width: 240px; background: #0f172a; display: flex; flex-direction: column; padding: 24px 0; }
+    .sidebar-brand { padding: 0 20px 24px; border-bottom: 1px solid #1e293b; margin-bottom: 12px; }
+    .sidebar-brand h2 { font-size: 18px; font-weight: 800; color: white; }
+    .sidebar-brand small { color: #64748b; font-size: 12px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 12px 20px; color: #94a3b8; cursor: pointer; font-size: 14px; font-weight: 500; border: none; background: none; width: 100%; text-align: left; border-left: 3px solid transparent; transition: all 0.15s; }
+    .nav-item:hover { color: white; background: #1e293b; }
+    .nav-item.active { color: white; background: #1e293b; border-left-color: #2563eb; }
+    .sidebar-footer { margin-top: auto; padding-top: 12px; border-top: 1px solid #1e293b; }
+
+    .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+    .topbar { background: white; border-bottom: 1px solid #e2e8f0; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+    .topbar h1 { font-size: 22px; font-weight: 800; color: #0f172a; }
+    .search-box { position: relative; }
+    .search-box input { padding: 10px 14px 10px 36px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 14px; width: 260px; outline: none; }
+    .search-box span { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+    .content { padding: 28px 32px; flex: 1; }
+
+    .section { display: none; }
+    .section.active { display: block; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+    .stat-card { background: white; border-radius: 14px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .stat-card small { color: #64748b; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-card h2 { font-size: 32px; font-weight: 800; margin-top: 8px; color: #0f172a; }
+
+    .card { background: white; border-radius: 14px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 20px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .card-header h3 { font-size: 16px; font-weight: 700; color: #0f172a; }
+
+    .tab-row { display: flex; gap: 8px; margin-bottom: 20px; }
+    .tab-btn { padding: 8px 18px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; background: #f1f5f9; color: #475569; transition: all 0.15s; }
+    .tab-btn.active, .tab-btn:hover { background: #2563eb; color: white; }
+
+    .tbl-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid #e2e8f0; }
+    table { width: 100%; border-collapse: collapse; background: white; font-size: 14px; }
+    thead th { background: #f8fafc; padding: 14px 16px; text-align: left; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; border-bottom: 1px solid #e2e8f0; }
+    tbody td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; color: #0f172a; }
+    tbody tr:last-child td { border-bottom: none; }
+
+    .btn { padding: 7px 14px; border-radius: 7px; border: none; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.15s; }
+    .btn-green { background: #10b981; color: white; }
+    .btn-red { background: #ef4444; color: white; }
+    .btn-gray { background: #f1f5f9; color: #475569; }
+    .btn-blue { background: #2563eb; color: white; }
+    .btn + .btn { margin-left: 6px; }
+
+    .pill { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    .pill-pending { background: #fef3c7; color: #d97706; }
+    .pill-approved { background: #d1fae5; color: #059669; }
+    .pill-rejected { background: #fee2e2; color: #ef4444; }
+    .pill-resolved { background: #d1fae5; color: #059669; }
+    .pill-dismissed { background: #f1f5f9; color: #64748b; }
+    .pill-under_review { background: #e0f2fe; color: #0369a1; }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+
+    .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 1000; justify-content: center; align-items: center; }
+    .modal-bg.open { display: flex; }
+    .modal-box { background: white; border-radius: 20px; padding: 32px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; position: relative; }
+    .modal-close { position: absolute; top: 16px; right: 20px; background: none; border: none; font-size: 24px; cursor: pointer; color: #64748b; }
+
+    .chat-modal-box { background: white; border-radius: 20px; width: 90%; max-width: 800px; height: 80vh; display: flex; flex-direction: column; overflow: hidden; }
+    .chat-head { background: #0f172a; color: white; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; }
+    .chat-head h3 { font-size: 16px; font-weight: 700; }
+    .chat-body { flex: 1; overflow-y: auto; padding: 20px; background: #f8fafc; display: flex; flex-direction: column; gap: 12px; }
+    .chat-form { padding: 20px; border-top: 1px solid #e2e8f0; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+    .form-input { width: 100%; padding: 11px 14px; border-radius: 9px; border: 1px solid #e2e8f0; font-size: 14px; font-family: 'Inter', sans-serif; outline: none; }
+    .form-input:focus { border-color: #2563eb; }
+
+    .ticket-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 14px; }
+    .ticket-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+    .empty-msg { text-align: center; color: #94a3b8; padding: 40px; font-size: 15px; }
+    .action-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <h2>eVoter Admin</h2>
+    <small>Central Authority</small>
+  </div>
+  <button class="nav-item active" data-section="dashboard">Dashboard</button>
+  <button class="nav-item" data-section="ec">Election Commity</button>
+  <button class="nav-item" data-section="bulkImport">Bulk Import</button>
+  <button class="nav-item" data-section="committee">Committee</button>
+  <button class="nav-item" data-section="classes">Class Management</button>
+  <button class="nav-item" data-section="elections">Conduct Vote</button>
+  <button class="nav-item" data-section="complaints">Support Desk</button>
+  <button class="nav-item" data-section="auditLog">Audit Trail</button>
+  <div class="sidebar-footer">
+    <button class="nav-item" id="logoutBtn" style="color:#fca5a5;">🚪 Logout</button>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <h1 id="pageTitle">System Control</h1>
+    <div class="search-box">
+      <span>🔍</span>
+      <input id="globalSearch" type="text" placeholder="Search..." autocomplete="new-password" name="search_q_unique" spellcheck="false">
+    </div>
+  </div>
+  <div class="content">
+
+    <div id="dashboard" class="section active" style="display:block;">
+      <div class="stats-grid">
+        <div class="stat-card"><small>Total Voters</small><h2 id="statVoters">-</h2></div>
+        <div class="stat-card"><small>Pending Voters</small><h2 id="statApps">-</h2></div>
+        <div class="stat-card"><small>Open Complaints</small><h2 id="statComplaints">-</h2></div>
+        <div class="stat-card"><small>Staff</small><h2 id="statStaff">-</h2></div>
+      </div>
+      <div class="card">
+        <p style="color:#64748b;">Welcome to the eVoter Admin Dashboard. Use the sidebar to manage the system.</p>
+      </div>
+    </div>
+
+    <div id="ec" class="section">
+      <div class="tab-row" id="ecTabs">
+        <button class="tab-btn active" data-ectab="voters">Voter Ledger</button>
+        <button class="tab-btn" data-ectab="candidates">Candidate Screening</button>
+      </div>
+      <div id="ec-voters">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
+          <div class="tab-row" id="voterStatusTabs" style="margin-bottom:0;">
+            <button class="tab-btn active" data-vstatus="pending">Pending</button>
+            <button class="tab-btn" data-vstatus="approved">Approved</button>
+            <button class="tab-btn" data-vstatus="rejected">Rejected</button>
+          </div>
+          <div>
+            <button class="btn btn-gray" id="exportVotersBtn">📥 CSV</button>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Roll No</th><th>PRN</th><th>Name</th><th>Dept</th><th>Year</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="voterTableBody"><tr><td colspan="7" class="empty-msg">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="ec-candidates" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h3>Candidate Applications</h3>
+          <button class="btn btn-gray" id="exportCandBtn">📥 CSV</button>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Position</th><th>Dept</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="candTableBody"><tr><td colspan="5" class="empty-msg">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="bulkImport" class="section">
+      <div class="card" style="max-width:600px; margin:0 auto; text-align:center;">
+        <h3 style="margin-bottom:16px;">Bulk Voter Registration</h3>
+        <p style="color:#64748b; margin-bottom:20px;">Upload CSV: <code>name, email, phone, rollNumber, department, year</code></p>
+        <input type="file" id="csvFile" accept=".csv" style="margin-bottom:20px;">
+        <br>
+        <button class="btn btn-green" style="width:100%; padding:14px;" id="importBtn">🚀 Start Bulk Import</button>
+        <div id="importResult" style="margin-top:16px; color:#475569;"></div>
+      </div>
+    </div>
+
+    <div id="committee" class="section">
+      <div class="card" style="margin-bottom:20px;">
+        <h3 style="margin-bottom:16px;">Add New Staff Member</h3>
+        <div class="form-grid">
+          <input class="form-input" id="staffName" placeholder="Full Name">
+          <input class="form-input" id="staffEmail" type="email" placeholder="Email">
+          <input class="form-input" id="staffPhone" placeholder="Mobile Number">
+          <input class="form-input" id="staffRoll" placeholder="Staff ID (6-digit unique)">
+          <input class="form-input" id="staffPass" type="password" placeholder="Password">
+          <select id="staffRole" class="form-input">
+            <option value="committee">Election Committee</option>
+            <option value="admin">System Admin</option>
+          </select>
+          <button class="btn btn-green" id="addStaffBtn" style="padding:11px;">Create Account</button>
+        </div>
+      </div>
+      <div class="card-header"><h3>Committee Performance</h3></div>
+      <div id="staffStats"><p class="empty-msg">Loading...</p></div>
+    </div>
+
+    <div id="classes" class="section">
+      <div class="card" style="margin-bottom:20px;">
+        <h3 style="margin-bottom:16px;">Register New Batch</h3>
+        <div style="display:grid; grid-template-columns: 2fr 1fr 1fr 150px; gap:16px; align-items: start;">
+          <div>
+            <label style="font-size: 11px; font-weight: 700; color: #64748b; display: block; margin-bottom: 6px; text-transform: uppercase;">Department</label>
+            <input class="form-input" id="classDept" placeholder="e.g. BSCIT">
+          </div>
+          <div>
+            <label style="font-size: 11px; font-weight: 700; color: #64748b; display: block; margin-bottom: 6px; text-transform: uppercase;">Admit Year</label>
+            <input class="form-input" id="admissionYear" type="number" placeholder="YYYY">
+            <div id="batchPreview" style="font-size: 10px; color: #2563eb; font-weight: 700; margin-top: 6px; min-height: 15px;"></div>
+          </div>
+          <div>
+            <label style="font-size: 11px; font-weight: 700; color: #64748b; display: block; margin-bottom: 6px; text-transform: uppercase;">Duration</label>
+            <input class="form-input" id="courseDuration" type="number" value="3">
+          </div>
+          <div>
+             <label style="font-size: 11px; color: transparent; display: block; margin-bottom: 6px;">Action</label>
+             <button class="btn btn-green" id="addClassBtn" style="width: 100%; height: 40px; font-size: 13px;">+ Add Batch</button>
+          </div>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Department</th><th>Admission Year</th><th>Duration</th><th>Current Period</th><th>Actions</th></tr></thead>
+          <tbody id="classTableBody"><tr><td colspan="5" class="empty-msg">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="elections" class="section">
+      <div class="card" style="margin-bottom:20px;">
+        <h3 style="margin-bottom:16px;">Create New Election</h3>
+        <div class="form-grid">
+          <input class="form-input" id="elecName" placeholder="Election Name (e.g. CR 2026)">
+          <select class="form-input" id="elecType">
+            <option value="class">Class Representative (CR/LR)</option>
+            <option value="general">Student Council (GS/DGS)</option>
+          </select>
+          <input class="form-input" id="elecDate" type="date">
+          <div style="display:flex; gap:8px;">
+            <input class="form-input" id="elecStart" type="time" title="Start Time">
+            <input class="form-input" id="elecEnd" type="time" title="End Time">
+          </div>
+          <input class="form-input" id="elecScope" placeholder="Scope (e.g. IT_SY or global)" value="global">
+          <button class="btn btn-green" id="createElecBtn" style="padding:11px;">Create Election</button>
+        </div>
+      </div>
+      <div class="card-header"><h3>Election Management</h3></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="elecTableBody"><tr><td colspan="4" class="empty-msg">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="complaints" class="section">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+        <h3 style="font-size:16px; font-weight:700;">Support Desk</h3>
+        <div class="tab-row" id="ticketStatusTabs" style="margin-bottom:0;">
+          <button class="tab-btn active" data-tfilter="all">All</button>
+          <button class="tab-btn" data-tfilter="pending">Pending</button>
+          <button class="tab-btn" data-tfilter="under_review">In Review</button>
+          <button class="tab-btn" data-tfilter="resolved">Resolved</button>
+        </div>
+      </div>
+      <div id="ticketList"><p class="empty-msg">Loading...</p></div>
+    </div>
+
+    <div id="auditLog" class="section">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h3 style="font-size:16px; font-weight:700;">Audit Trail</h3>
+        <button class="btn btn-gray" id="exportAuditBtn">📥 Export CSV</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Timestamp</th><th>User</th><th>Action</th><th>Details</th></tr></thead>
+          <tbody id="auditTableBody"><tr><td colspan="4" class="empty-msg">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- DETAILS MODAL -->
+<div id="detailsModal" class="modal-bg">
+  <div class="modal-box">
+    <button class="modal-close" id="closeDetailsModal">×</button>
+    <div id="modalContent"></div>
+    <div id="modalActions" class="action-btns" style="margin-top:20px;"></div>
+  </div>
+</div>
+
+<!-- CHAT MODAL -->
+<div id="chatModal" class="modal-bg">
+  <div class="chat-modal-box">
+    <div class="chat-head">
+      <h3 id="chatTitle">Ticket Thread</h3>
+      <button id="closeChatModal" style="background:none;border:none;color:white;font-size:24px;cursor:pointer;">×</button>
+    </div>
+    <div id="chatBody" class="chat-body"></div>
+    <div class="chat-form">
+      <textarea id="replyMsg" class="form-input" style="min-height:80px; resize:none; width:100%; margin-bottom:10px;" placeholder="Type your reply..."></textarea>
+      <div style="display:flex; justify-content:flex-end; gap:10px;">
+        <select id="replyStatus" class="form-input" style="width:160px;">
+          <option value="under_review">Under Review</option>
+          <option value="resolved">Resolved</option>
+          <option value="dismissed">Dismissed</option>
+        </select>
+        <button class="btn btn-green" id="sendReplyBtn">Send Reply</button>
+      </div>
+    </div>
+    </div>
+  </div>
+</div>
+
+<!-- ELECTION BREAKDOWN MODAL -->
+<div id="breakdownModal" class="modal-bg">
+  <div class="modal-box" style="max-width: 840px;">
+    <button class="modal-close" id="closeBreakdownModal">×</button>
+    <div id="breakdownContent"></div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+  window.onerror = (m, s, l, c, e) => { alert(`JS Error: ${m} at line ${l}`); console.error(e); };
+
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+  const getCookie = n => { const v = `; ${document.cookie}`, p = v.split(`; ${n}=`); if (p.length === 2) return p.pop().split(';').shift(); return ''; };
+
+  const api = async (url, method = 'GET', body = null) => {
+    try {
+      const csrf = getCookie('XSRF-TOKEN');
+      console.log(`[DEBUG] API ${method} ${url} | CSRF: ${csrf ? 'Found' : 'Missing'}`);
+      const opts = { method, credentials: 'include', headers: { 'X-CSRF-Token': csrf } };
+      if (body && !(body instanceof FormData)) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+      else if (body instanceof FormData) opts.body = body;
+      const r = await fetch(url, opts);
+      if (r.status === 401) { localStorage.clear(); window.location.href = 'login'; return null; }
+      const json = await r.json();
+      if (!r.ok) {
+        console.error(`[DEBUG] API ${url} Error ${r.status}:`, json);
+        alert(`Error (${r.status}): ${json.msg || 'Action failed'}`);
+        return null;
+      }
+      return json;
+    } catch(e) { 
+      console.error('API error', url, e); 
+      alert('Network or Server Error. Check console.');
+      return null; 
+    }
+  };
+
+  const getPeriodLabel = (admitYear, duration) => {
+    const now = new Date();
+    const curYear = now.getFullYear();
+    const curMonth = now.getMonth();
+    const academicYear = curMonth < 5 ? curYear - 1 : curYear;
+    const diff = (academicYear - admitYear) + 1;
+    if (diff <= 0) return 'Upcoming';
+    if (diff > duration) return 'Alumni';
+    const labels = ['FY', 'SY', 'TY', 'LY', '5thY', '6thY'];
+    return labels[diff-1] || `${diff}thY`;
+  };
+
+  const getPeriod = (admitYear, duration) => {
+    const label = getPeriodLabel(admitYear, duration);
+    if (label === 'Upcoming') return `<span class="badge" style="background:#fef3c7; color:#d97706;">Upcoming</span>`;
+    if (label === 'Alumni') return `<span class="badge" style="background:#f1f5f9; color:#64748b;">Alumni</span>`;
+    return `<span class="badge" style="background:#d1fae5; color:#059669;">${label}</span>`;
+  };
+
+  const updateBatchPreview = () => {
+    const year = parseInt(document.getElementById('admissionYear').value);
+    const duration = parseInt(document.getElementById('courseDuration').value) || 3;
+    const preview = document.getElementById('batchPreview');
+    if (year > 1900 && year < 2100) {
+      preview.innerText = `Current Status: ${getPeriodLabel(year, duration)}`;
+    } else {
+      preview.innerText = "";
+    }
+  };
+
+  // ── State ────────────────────────────────────────────────────────────────────
+  let currentUser = null;
+  let voterStatus = 'pending';
+  let ticketFilter = 'all';
+  let currentTicketId = null;
+  let allVoters = [];
+  let allComplaints = [];
+
+  // ── Modals ───────────────────────────────────────────────────────────────────
+  const openModal  = id => document.getElementById(id).classList.add('open');
+  const closeModal = id => document.getElementById(id).classList.remove('open');
+
+  document.getElementById('closeDetailsModal').addEventListener('click', () => closeModal('detailsModal'));
+  document.getElementById('closeChatModal').addEventListener('click', () => closeModal('chatModal'));
+  document.getElementById('closeBreakdownModal').addEventListener('click', () => closeModal('breakdownModal'));
+  document.getElementById('sendReplyBtn').addEventListener('click', sendReply);
+
+  // Batch Preview Listeners
+  document.getElementById('admissionYear').addEventListener('input', updateBatchPreview);
+  document.getElementById('courseDuration').addEventListener('input', updateBatchPreview);
+
+  // ── Sidebar Navigation (event delegation) ────────────────────────────────────
+  document.getElementById('sidebar').addEventListener('click', e => {
+    const btn = e.target.closest('[data-section]');
+    if (!btn) return;
+    navigate(btn.dataset.section, btn);
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await api('/api/auth/logout', 'POST');
+    localStorage.clear();
+    window.location.href = 'login';
+  });
+
+  function navigate(id, btn) {
+    document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'block';
+    if (btn) btn.classList.add('active');
+    const titles = { dashboard:'System Control', ec:'Election Commission', bulkImport:'Bulk Import', committee:'Committee', classes:'Class Management', elections:'Conduct Vote', complaints:'Support Desk', auditLog:'Audit Trail' };
+    document.getElementById('pageTitle').textContent = titles[id] || id;
+    console.log(`[DEBUG] Navigating to section: ${id}`);
+    if (id === 'ec') loadVoters();
+    if (id === 'auditLog') loadAuditLogs();
+    if (id === 'committee') loadCommittee();
+    if (id === 'classes') {
+        document.getElementById('admissionYear').value = new Date().getFullYear();
+        updateBatchPreview();
+        loadClasses();
+    }
+    if (id === 'elections') {
+        console.log("[DEBUG] Calling loadElections()");
+        loadElections();
+    }
+    if (id === 'complaints') loadComplaints();
+  }
+
+  // ── EC Tabs ──────────────────────────────────────────────────────────────────
+  document.getElementById('ecTabs').addEventListener('click', e => {
+    const btn = e.target.closest('[data-ectab]');
+    if (!btn) return;
+    const tab = btn.dataset.ectab;
+    document.getElementById('ec-voters').style.display = tab === 'voters' ? 'block' : 'none';
+    document.getElementById('ec-candidates').style.display = tab === 'candidates' ? 'block' : 'none';
+    document.querySelectorAll('#ecTabs .tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (tab === 'voters') loadVoters(); else loadCandidates();
+  });
+
+  document.getElementById('voterStatusTabs').addEventListener('click', e => {
+    const btn = e.target.closest('[data-vstatus]');
+    if (!btn) return;
+    voterStatus = btn.dataset.vstatus;
+    document.querySelectorAll('#voterStatusTabs .tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderVoters();
+  });
+
+  document.getElementById('ticketStatusTabs').addEventListener('click', e => {
+    const btn = e.target.closest('[data-tfilter]');
+    if (!btn) return;
+    ticketFilter = btn.dataset.tfilter;
+    document.querySelectorAll('#ticketStatusTabs .tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderComplaints();
+  });
+
+  // ── Voter Table delegation ───────────────────────────────────────────────────
+  document.getElementById('voterTableBody').addEventListener('click', async e => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const { action, id } = btn.dataset;
+    if (action === 'view-voter') viewVoter(id);
+    if (action === 'approve-voter') doVoterAction(id, 'approve');
+    if (action === 'reject-voter')  doVoterAction(id, 'reject');
+  });
+
+  // ── Candidate Table delegation ────────────────────────────────────────────────
+  document.getElementById('candTableBody').addEventListener('click', async e => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const { action, id } = btn.dataset;
+    if (action === 'view-cand')    viewCand(id);
+    if (action === 'approve-cand') doCandAction(id, 'approve');
+    if (action === 'reject-cand')  doCandAction(id, 'reject');
+  });
+
+  // ── Complaint list delegation ─────────────────────────────────────────────────
+  document.getElementById('ticketList').addEventListener('click', e => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    if (btn.dataset.action === 'open-chat') openChat(btn.dataset.id);
+  });
+
+  // ── Staff list delegation ─────────────────────────────────────────────────────
+  document.getElementById('staffStats').addEventListener('click', async e => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const { action, id } = btn.dataset;
+    if (action === 'assign-depts') {
+      const dept = prompt('Departments (comma-separated, e.g. IT,BCOM):');
+      if (!dept) return;
+      await api(`/api/auth/assign-depts/${id}`, 'POST', { departments: dept.split(',').map(d => d.trim()) });
+      loadCommittee();
+    }
+    if (action === 'remove-staff') {
+      if (!confirm('Remove this staff member?')) return;
+      await api(`/api/auth/committee/${id}`, 'DELETE');
+      loadCommittee(); loadStats();
+    }
+  });
+
+  // ── Class table delegation ────────────────────────────────────────────────────
+  document.getElementById('classTableBody').addEventListener('click', async e => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    if (btn.dataset.action === 'delete-class') {
+      if (!confirm('Delete this class?')) return;
+      await api(`/api/classes/${btn.dataset.id}`, 'DELETE');
+      loadClasses();
+    }
+  });
+
+  // ── Modal actions delegation ──────────────────────────────────────────────────
+  document.getElementById('modalActions').addEventListener('click', async e => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const { action, id } = btn.dataset;
+    if (action === 'approve-voter-m') { await doVoterAction(id, 'approve'); closeModal('detailsModal'); }
+    if (action === 'reject-voter-m')  { await doVoterAction(id, 'reject');  closeModal('detailsModal'); }
+    if (action === 'approve-cand-m')  { await doCandAction(id, 'approve');  closeModal('detailsModal'); }
+    if (action === 'reject-cand-m')   { await doCandAction(id, 'reject');   closeModal('detailsModal'); }
+    if (action === 'close-modal')     { closeModal('detailsModal'); }
+  });
+
+  // ── Static button listeners ───────────────────────────────────────────────────
+  document.getElementById('addStaffBtn').addEventListener('click', registerStaff);
+  document.getElementById('addClassBtn').addEventListener('click', addClass);
+  document.getElementById('exportVotersBtn').addEventListener('click', () => exportData('voters'));
+  document.getElementById('exportCandBtn').addEventListener('click', () => exportData('candidates'));
+  document.getElementById('exportAuditBtn').addEventListener('click', () => exportData('audit'));
+  document.getElementById('importBtn').addEventListener('click', bulkImport);
+  document.getElementById('globalSearch').addEventListener('input', () => {
+    const activeEl = document.querySelector('.section[style*="block"]');
+    const id = activeEl ? activeEl.id : '';
+    if (id === 'ec') {
+      if (document.getElementById('ec-voters').style.display !== 'none') renderVoters();
+      else renderCandidates();
+    }
+    if (id === 'complaints') renderComplaints();
+    if (id === 'auditLog') loadAuditLogs();
+    if (id === 'elections') renderElections();
+  });
+
+  // ── Voters ───────────────────────────────────────────────────────────────────
+  async function loadVoters() {
+    document.getElementById('voterTableBody').innerHTML = '<tr><td colspan="6" class="empty-msg">Loading...</td></tr>';
+    const data = await api('/api/auth/voters');
+    allVoters = Array.isArray(data) ? data : [];
+    renderVoters();
+  }
+
+  function renderVoters() {
+    const q = document.getElementById('globalSearch').value.toLowerCase().trim();
+    const filtered = allVoters.filter(v => {
+      const st = (v.status || '').toLowerCase();
+      const matchStatus = st === voterStatus;
+      const matchSearch = !q || (v.name||'').toLowerCase().includes(q) || (v.rollNumber||'').toLowerCase().includes(q) || (v.email||'').toLowerCase().includes(q);
+      return matchStatus && matchSearch;
+    });
+    if (!allVoters.length) { document.getElementById('voterTableBody').innerHTML = '<tr><td colspan="7" class="empty-msg">Failed to load voters.</td></tr>'; return; }
+    if (!filtered.length) { document.getElementById('voterTableBody').innerHTML = `<tr><td colspan="7" class="empty-msg">No ${voterStatus} voters${q ? ` matching "${q}"` : ''}.</td></tr>`; return; }
+    document.getElementById('voterTableBody').innerHTML = filtered.map(v => `
+      <tr>
+        <td>${v.rollNumber||'-'}</td>
+        <td>${v.prn||'-'}</td>
+        <td><strong>${v.name}</strong><br><small style="color:#64748b;">${v.email}</small></td>
+        <td>${v.department||'-'}</td>
+        <td>${v.year||'-'}</td>
+        <td><span class="pill pill-${v.status}">${v.status}</span></td>
+        <td class="action-btns">
+          <button class="btn btn-gray" data-action="view-voter" data-id="${v._id}">Details</button>
+          ${v.status === 'pending' ? `<button class="btn btn-green" data-action="approve-voter" data-id="${v._id}">Approve</button>` : ''}
+          <button class="btn btn-red" data-action="reject-voter" data-id="${v._id}">${v.status === 'approved' ? 'Remove' : 'Reject'}</button>
+        </td>
+      </tr>`).join('');
+  }
+
+  async function doVoterAction(id, status) {
+    const reason = status === 'reject' ? (prompt('Rejection reason (optional):') || '') : '';
+    await api(`/api/auth/approve-voter/${id}`, 'POST', { status, reason });
+    await loadVoters(); loadStats();
+  }
+ 
+  async function viewVoter(id) {
+    const v = allVoters.find(x => x._id === id);
+    if (!v) return;
+    const passportImg = v.profilePhoto ? `<img src="${v.profilePhoto}" style="width:130px;height:165px;object-fit:cover;border-radius:12px;border:2px solid #2563eb;">` : '<div style="width:130px;height:165px;background:#f1f5f9;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:11px;border:1px dashed #e2e8f0;">No Passport Photo</div>';
+    const biometricImg = v.faceData ? `<img src="${v.faceData}" style="width:130px;height:165px;object-fit:cover;border-radius:12px;border:1px solid #e2e8f0;">` : '<div style="width:130px;height:165px;background:#f1f5f9;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:11px;">No Biometric</div>';
+    document.getElementById('modalContent').innerHTML = `
+      <h3 style="margin-bottom:20px;">Voter Details</h3>
+      <div style="display:flex; gap:24px; align-items:flex-start;">
+        <div style="display:flex; flex-direction:column; gap:15px; text-align:center;">
+          <div><small style="font-weight:700; color:#2563eb; display:block; margin-bottom:5px; text-transform:uppercase; font-size:10px;">ID Card Photo</small>${passportImg}</div>
+          <div><small style="font-weight:700; color:#64748b; display:block; margin-bottom:5px; text-transform:uppercase; font-size:10px;">Biometric Scan</small>${biometricImg}</div>
+        </div>
+        <div style="flex:1;">
+          <table style="width:100%;font-size:14px;border-collapse:collapse;">
+            <tr><td style="padding:8px;color:#64748b;width:100px;">Name</td><td style="padding:8px;font-weight:600;">${v.name}</td></tr>
+            <tr><td style="padding:8px;color:#64748b;">Email</td><td style="padding:8px;">${v.email}</td></tr>
+            <tr><td style="padding:8px;color:#64748b;">Phone</td><td style="padding:8px;">${v.phone||'N/A'}</td></tr>
+            <tr><td style="padding:8px;color:#64748b;">Roll No</td><td style="padding:8px;">${v.rollNumber||'-'}</td></tr>
+            <tr><td style="padding:8px;color:#64748b;">PRN No</td><td style="padding:8px;">${v.prn||'-'}</td></tr>
+            <tr><td style="padding:8px;color:#64748b;">Dept / Year</td><td style="padding:8px;">${v.department||'-'} — ${v.year||'-'}</td></tr>
+            <tr><td style="padding:8px;color:#64748b;">Status</td><td style="padding:8px;"><span class="pill pill-${v.status}">${v.status}</span></td></tr>
+            ${v.rejectionReason ? `<tr><td style="padding:8px;color:#64748b;">Rejected Reason</td><td style="padding:8px;">${v.rejectionReason}</td></tr>` : ''}
+          </table>
+        </div>
+      </div>`;
+    document.getElementById('modalActions').innerHTML = `
+      ${v.status === 'pending' ? `<button class="btn btn-green" data-action="approve-voter-m" data-id="${v._id}">Approve</button>` : ''}
+      <button class="btn btn-red" data-action="reject-voter-m" data-id="${v._id}">${v.status === 'approved' ? 'Remove' : 'Reject'}</button>
+      <button class="btn btn-gray" data-action="close-modal">Close</button>`;
+    openModal('detailsModal');
+  }
+
+  // ── Candidates ────────────────────────────────────────────────────────────────
+  let allCandidates = [];
+
+  async function loadCandidates() {
+    document.getElementById('candTableBody').innerHTML = '<tr><td colspan="5" class="empty-msg">Loading...</td></tr>';
+    const data = await api('/api/candidates/all');
+    allCandidates = Array.isArray(data) ? data : [];
+    renderCandidates();
+  }
+
+  function renderCandidates() {
+    const q = document.getElementById('globalSearch').value.toLowerCase().trim();
+    const filtered = allCandidates.filter(c => !q || (c.name||'').toLowerCase().includes(q) || (c.position||'').toLowerCase().includes(q));
+    if (!allCandidates.length) { document.getElementById('candTableBody').innerHTML = '<tr><td colspan="5" class="empty-msg">Failed to load candidates.</td></tr>'; return; }
+    if (!filtered.length) { document.getElementById('candTableBody').innerHTML = '<tr><td colspan="5" class="empty-msg">No candidates found.</td></tr>'; return; }
+    document.getElementById('candTableBody').innerHTML = filtered.map(c => `
+      <tr>
+        <td><strong>${c.name}</strong></td>
+        <td>${c.position||'-'}</td>
+        <td>${c.department||'-'}</td>
+        <td><span class="pill pill-${c.status}">${c.status}</span></td>
+        <td class="action-btns">
+          <button class="btn btn-gray" data-action="view-cand" data-id="${c._id}">Details</button>
+          ${c.status === 'pending' ? `<button class="btn btn-green" data-action="approve-cand" data-id="${c._id}">Approve</button>` : ''}
+          <button class="btn btn-red" data-action="reject-cand" data-id="${c._id}">Reject</button>
+        </td>
+      </tr>`).join('');
+  }
+
+  async function doCandAction(id, status) {
+    const reason = status === 'reject' ? (prompt('Rejection reason (optional):') || '') : '';
+    await api(`/api/candidates/approve/${id}`, 'POST', { status, reason });
+    await loadCandidates();
+  }
+
+  async function viewCand(id) {
+    const c = allCandidates.find(x => x._id === id);
+    if (!c) return;
+    // Find voter profile to get registration face data
+    const v = allVoters.find(x => x.email === c.email || x.rollNumber === c.rollNumber);
+    const uploadedPhoto = c.photo ? `<img src="${c.photo}" style="width:140px;height:160px;object-fit:cover;border-radius:10px;border:1px solid #e2e8f0;">` : '<div style="width:140px;height:160px;background:#f1f5f9;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:11px;">No Uploaded Photo</div>';
+    const capturedFace = (v && v.faceData) ? `<img src="${v.faceData}" style="width:140px;height:160px;object-fit:cover;border-radius:10px;border:1px solid #e2e8f0;">` : '<div style="width:140px;height:160px;background:#f1f5f9;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:11px;">No Captured Face</div>';
+
+    document.getElementById('modalContent').innerHTML = `
+      <h3 style="margin-bottom:20px;">Candidate Details</h3>
+      <div style="display:flex; gap:16px; margin-bottom:20px;">
+        <div style="text-align:center;"><small style="display:block;margin-bottom:6px;color:#64748b;font-weight:700;text-transform:uppercase;font-size:10px;">Uploaded Profile</small>${uploadedPhoto}</div>
+        <div style="text-align:center;"><small style="display:block;margin-bottom:6px;color:#64748b;font-weight:700;text-transform:uppercase;font-size:10px;">Captured Face</small>${capturedFace}</div>
+      </div>
+      <table style="width:100%;font-size:14px;border-collapse:collapse;">
+        <tr><td style="padding:8px;color:#64748b;width:100px;">Name</td><td style="padding:8px;font-weight:600;">${c.name}</td></tr>
+        <tr><td style="padding:8px;color:#64748b;">Position</td><td style="padding:8px;">${c.position||'-'}</td></tr>
+        <tr><td style="padding:8px;color:#64748b;">Dept</td><td style="padding:8px;">${c.department||'-'}</td></tr>
+        <tr><td style="padding:8px;color:#64748b;">Status</td><td style="padding:8px;"><span class="pill pill-${c.status}">${c.status}</span></td></tr>
+        ${c.manifesto ? `<tr><td style="padding:8px;color:#64748b;">Manifesto</td><td style="padding:8px;">${c.manifesto}</td></tr>` : ''}
+      </table>`;
+    document.getElementById('modalActions').innerHTML = `
+      ${c.status === 'pending' ? `<button class="btn btn-green" data-action="approve-cand-m" data-id="${c._id}">Approve</button>` : ''}
+      <button class="btn btn-red" data-action="reject-cand-m" data-id="${c._id}">Reject</button>
+      <button class="btn btn-gray" data-action="close-modal">Close</button>`;
+    openModal('detailsModal');
+  }
+
+  // ── Stats ─────────────────────────────────────────────────────────────────────
+  async function loadStats() {
+    const [vr, cr, sr] = await Promise.allSettled([
+      api('/api/auth/voters'), api('/api/helpdesk/all'), api('/api/auth/committee-stats')
+    ]);
+    const v = vr.status === 'fulfilled' && Array.isArray(vr.value) ? vr.value : [];
+    const c = cr.status === 'fulfilled' && Array.isArray(cr.value) ? cr.value : [];
+    const s = sr.status === 'fulfilled' && Array.isArray(sr.value) ? sr.value : [];
+    document.getElementById('statVoters').textContent = v.length;
+    document.getElementById('statApps').textContent = v.filter(x => (x.status||'') === 'pending').length;
+    document.getElementById('statComplaints').textContent = c.filter(x => (x.status||'') === 'pending').length;
+    document.getElementById('statStaff').textContent = s.length;
+  }
+
+  // ── Audit ─────────────────────────────────────────────────────────────────────
+  async function loadAuditLogs() {
+    document.getElementById('auditTableBody').innerHTML = '<tr><td colspan="4" class="empty-msg">Loading...</td></tr>';
+    const data = await api('/api/auth/audit-logs');
+    if (!Array.isArray(data)) { document.getElementById('auditTableBody').innerHTML = '<tr><td colspan="4" class="empty-msg">Failed to load.</td></tr>'; return; }
+    const q = document.getElementById('globalSearch').value.toLowerCase().trim();
+    const filtered = data.filter(l => !q || (l.action||'').toLowerCase().includes(q) || (l.details||'').toLowerCase().includes(q));
+    document.getElementById('auditTableBody').innerHTML = filtered.length ? filtered.map(l => `
+      <tr>
+        <td>${new Date(l.timestamp).toLocaleString()}</td>
+        <td>${l.userName||'System'}</td>
+        <td>${l.action||'-'}</td>
+        <td>${l.details||'-'}</td>
+      </tr>`).join('') : '<tr><td colspan="4" class="empty-msg">No audit logs.</td></tr>';
+  }
+
+  // ── Committee ─────────────────────────────────────────────────────────────────
+  async function loadCommittee() {
+    document.getElementById('staffStats').innerHTML = '<p class="empty-msg">Loading...</p>';
+    const data = await api('/api/auth/committee-stats');
+    if (!Array.isArray(data)||!data.length) { document.getElementById('staffStats').innerHTML = '<p class="empty-msg">No committee members.</p>'; return; }
+    document.getElementById('staffStats').innerHTML = data.map(s => `
+      <div class="ticket-card">
+        <div class="ticket-top">
+          <div>
+            <strong>${s.name}</strong>
+            <div style="color:#64748b;font-size:13px;">${s.email}</div>
+            ${s.departments?.length ? `<div style="font-size:12px;color:#475569;margin-top:4px;">Depts: ${s.departments.join(', ')}</div>` : ''}
+          </div>
+          <div class="action-btns">
+            <span class="pill pill-approved">Actions: ${s.totalActions||0}</span>
+            <button class="btn btn-gray" data-action="assign-depts" data-id="${s.id||s._id}">Assign Depts</button>
+            <button class="btn btn-red" data-action="remove-staff" data-id="${s.id||s._id}">Remove</button>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+
+  async function registerStaff() {
+    const body = {
+      name: document.getElementById('staffName').value.trim(),
+      email: document.getElementById('staffEmail').value.trim(),
+      phone: document.getElementById('staffPhone').value.trim(),
+      rollNumber: document.getElementById('staffRoll').value.trim(),
+      password: document.getElementById('staffPass').value,
+      role: document.getElementById('staffRole').value
+    };
+    if (!body.name || !body.email || !body.password || !body.rollNumber) return alert('Fill all required fields.');
+    
+    // Validation: 6-digit Staff ID
+    if (!/^\d{6}$/.test(body.rollNumber)) {
+      return alert('Staff ID must be exactly 6 digits.');
+    }
+    
+    const res = await api('/api/auth/register-staff', 'POST', body);
+    if (res) { 
+      alert('Staff account created!'); 
+      document.getElementById('staffName').value = '';
+      document.getElementById('staffEmail').value = '';
+      document.getElementById('staffPhone').value = '';
+      document.getElementById('staffRoll').value = '';
+      document.getElementById('staffPass').value = '';
+      loadCommittee(); loadStats(); 
+    }
+  }
+
+  // ── Classes ───────────────────────────────────────────────────────────────────
+  async function loadClasses() {
+    document.getElementById('classTableBody').innerHTML = '<tr><td colspan="5" class="empty-msg">Loading...</td></tr>';
+    const data = await api('/api/classes');
+    if (!Array.isArray(data)) { document.getElementById('classTableBody').innerHTML = '<tr><td colspan="5" class="empty-msg">Failed to load.</td></tr>'; return; }
+    document.getElementById('classTableBody').innerHTML = data.length ? data.map(c => `
+      <tr>
+        <td><strong>${c.department}</strong></td>
+        <td>${c.admissionYear}</td>
+        <td>${c.courseDuration} Years</td>
+        <td>${getPeriod(c.admissionYear, c.courseDuration)}</td>
+        <td><button class="btn btn-red" data-action="delete-class" data-id="${c._id}">Delete</button></td>
+      </tr>`).join('') : '<tr><td colspan="5" class="empty-msg">No classes.</td></tr>';
+  }
+
+  async function addClass() {
+    const department = document.getElementById('classDept').value.trim();
+    const admissionYear = parseInt(document.getElementById('admissionYear').value);
+    const courseDuration = parseInt(document.getElementById('courseDuration').value);
+    if (!department || !admissionYear) return alert('Enter department and admission year.');
+    const res = await api('/api/classes', 'POST', { department, admissionYear, courseDuration });
+    if (res) { 
+        document.getElementById('classDept').value = ''; 
+        document.getElementById('admissionYear').value = '';
+        document.getElementById('batchPreview').innerText = '';
+        loadClasses(); 
+        loadStats();
+    }
+  }
+
+  // ── Complaints ────────────────────────────────────────────────────────────────
+  async function loadComplaints() {
+    document.getElementById('ticketList').innerHTML = '<p class="empty-msg">Loading...</p>';
+    const data = await api('/api/helpdesk/all');
+    allComplaints = Array.isArray(data) ? data : [];
+    renderComplaints();
+  }
+
+  function renderComplaints() {
+    const q = document.getElementById('globalSearch').value.toLowerCase().trim();
+    const filtered = allComplaints.filter(c => {
+      const matchFilter = ticketFilter === 'all' || (c.status||'') === ticketFilter;
+      const matchSearch = !q || (c.trackingId||'').toLowerCase().includes(q) || (c.message||'').toLowerCase().includes(q);
+      return matchFilter && matchSearch;
+    });
+    if (!allComplaints.length) { document.getElementById('ticketList').innerHTML = '<p class="empty-msg">Failed to load complaints.</p>'; return; }
+    if (!filtered.length) { document.getElementById('ticketList').innerHTML = '<p class="empty-msg">No complaints found.</p>'; return; }
+    document.getElementById('ticketList').innerHTML = filtered.map(c => `
+      <div class="ticket-card">
+        <div class="ticket-top">
+          <div>
+            <strong>${c.trackingId||'N/A'}</strong>
+            <span class="pill pill-${c.status||'pending'}" style="margin-left:8px;">${(c.status||'pending').replace('_',' ')}</span>
+            <div style="color:#64748b;font-size:12px;margin-top:4px;">${c.category||'General'} — ${c.createdAt ? new Date(c.createdAt).toLocaleDateString() : 'N/A'}</div>
+          </div>
+          <button class="btn btn-blue" data-action="open-chat" data-id="${c._id}">Open Thread</button>
+        </div>
+        <p style="color:#475569;font-size:14px;margin-top:8px;">${(c.message||'').substring(0,120)}${(c.message||'').length>120?'...':''}</p>
+      </div>`).join('');
+  }
+
+  async function openChat(id) {
+    currentTicketId = id;
+    const c = allComplaints.find(x => x._id === id);
+    if (!c) { const fresh = await api('/api/helpdesk/all'); allComplaints = Array.isArray(fresh) ? fresh : []; }
+    const ticket = allComplaints.find(x => x._id === id);
+    if (!ticket) return;
+    document.getElementById('chatTitle').textContent = `${ticket.trackingId} — ${ticket.status}`;
+    document.getElementById('chatBody').innerHTML = (ticket.replies||[]).length ? ticket.replies.map(r => `
+      <div style="background:${r.sender==='voter'?'white':'#ecfdf5'};padding:12px 16px;border-radius:12px;border:1px solid #e2e8f0;align-self:${r.sender==='voter'?'flex-start':'flex-end'};max-width:80%;">
+        <small style="color:#64748b;font-size:12px;">${r.senderName||r.sender} · ${new Date(r.timestamp).toLocaleTimeString()}</small>
+        <p style="margin-top:4px;font-size:14px;">${r.message}</p>
+      </div>`).join('') : '<p style="text-align:center;color:#94a3b8;">No replies yet.</p>';
+    openModal('chatModal');
+  }
+
+  async function sendReply() {
+    const msg = document.getElementById('replyMsg').value.trim();
+    if (!msg) return alert('Enter a message.');
+    const status = document.getElementById('replyStatus').value;
+    const fd = new FormData();
+    fd.append('message', msg);
+    await fetch(`/api/helpdesk/reply/${currentTicketId}`, { method:'POST', headers:{'X-CSRF-Token':getCookie('XSRF-TOKEN')}, credentials:'include', body:fd });
+    await api(`/api/helpdesk/action/${currentTicketId}`, 'POST', { status });
+    document.getElementById('replyMsg').value = '';
+    await loadComplaints();
+    openChat(currentTicketId);
+  }
+
+  // ── Export ────────────────────────────────────────────────────────────────────
+  async function exportData(type) {
+    const map = { voters:['/api/auth/voters','Voters.csv'], candidates:['/api/candidates/all','Candidates.csv'], audit:['/api/auth/audit-logs','AuditTrail.csv'] };
+    const [url, name] = map[type];
+    const data = await api(url);
+    if (!Array.isArray(data)||!data.length) return alert('No data to export.');
+    const skip = ['faceData','photo','password','faceDescriptor','__v'];
+    const keys = Object.keys(data[0]).filter(k => !skip.includes(k));
+    const csv = [keys.join(','), ...data.map(r => keys.map(k => JSON.stringify(r[k]??'')).join(','))].join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+    a.download = name; a.click();
+  }
+
+  // ── Bulk Import ───────────────────────────────────────────────────────────────
+  async function bulkImport() {
+    const f = document.getElementById('csvFile').files[0];
+    if (!f) return alert('Select a CSV file first.');
+    const fd = new FormData(); fd.append('file', f);
+    document.getElementById('importResult').textContent = 'Importing...';
+    const r = await fetch('/api/auth/bulk-import', { method:'POST', headers:{'X-CSRF-Token':getCookie('XSRF-TOKEN')}, credentials:'include', body:fd });
+    const json = await r.json();
+    document.getElementById('importResult').textContent = json.msg||'Done.';
+    loadStats();
+  }
+
+  // ── Elections ────────────────────────────────────────────────────────────────
+  let allElections = [];
+  async function loadElections() {
+    console.log("[DEBUG] Loading elections...");
+    document.getElementById('elecTableBody').innerHTML = '<tr><td colspan="4" class="empty-msg">Loading...</td></tr>';
+    const data = await api('/api/elections');
+    console.log("[DEBUG] Elections data received:", data);
+    allElections = Array.isArray(data) ? data : [];
+    renderElections();
+  }
+
+  function renderElections() {
+    const q = document.getElementById('globalSearch').value.toLowerCase().trim();
+    console.log("[DEBUG] Rendering elections. Filter:", q, "Total:", allElections.length);
+    const filtered = allElections.filter(e => !q || (e.name||'').toLowerCase().includes(q));
+    const tbody = document.getElementById('elecTableBody');
+    if (!allElections.length) { 
+        console.log("[DEBUG] No elections found to render.");
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-msg">No elections created.</td></tr>'; 
+        return; 
+    }
+    if (!filtered.length) { 
+        console.log("[DEBUG] No matches found for filter.");
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-msg">No matches found.</td></tr>'; 
+        return; 
+    }
+    
+    tbody.innerHTML = filtered.map(e => {
+        let act = '';
+        if (e.status === 'scheduled') act = `<button class="btn btn-green" data-action="start" data-id="${e._id}">Start Polls</button>`;
+        else if (e.status === 'active') act = `<button class="btn btn-red" data-action="end" data-id="${e._id}">End Polls</button>`;
+        else if (e.status === 'ended') act = `<button class="btn btn-blue" data-action="finalize" data-id="${e._id}">Finalize Results</button>`;
+        
+        return `
+          <tr>
+            <td><strong>${e.name}</strong><br><small style="color:#64748b;">${new Date(e.date).toLocaleDateString()}</small></td>
+            <td>${e.type.toUpperCase()}</td>
+            <td><span class="pill pill-${e.status}">${e.status}</span></td>
+            <td class="action-btns">
+              ${act}
+              <button class="btn btn-blue" data-action="breakdown" data-id="${e._id}">View Breakdown</button>
+              <button class="btn btn-gray" data-action="reset" data-id="${e._id}">Reset</button>
+              <button class="btn btn-red" data-action="delete" data-id="${e._id}">Delete</button>
+            </td>
+          </tr>`;
+    }).join('');
+  }
+
+  // ── Election delegation ──────────────────────────────────────────────────────
+  document.getElementById('elecTableBody').addEventListener('click', async e => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    const { action, id } = btn.dataset;
+    console.log(`[DEBUG] Election Action: ${action} on ID: ${id}`);
+    if (action === 'start') window.updateElec(id, 'active');
+    if (action === 'end')   window.updateElec(id, 'ended');
+    if (action === 'finalize') window.finalizeElec(id);
+    if (action === 'reset') window.resetElec(id);
+    if (action === 'delete') window.deleteElec(id);
+    if (action === 'breakdown') viewBreakdown(id);
+  });
+
+  async function viewBreakdown(elecId) {
+    const elec = allElections.find(e => e._id === elecId);
+    if (!elec) return;
+    
+    document.getElementById('breakdownContent').innerHTML = '<p class="empty-msg">Loading breakdown...</p>';
+    openModal('breakdownModal');
+    
+    const candidates = await api('/api/candidates/all');
+    if (!candidates) return;
+    
+    const filtered = candidates.filter(c => c.electionId === elecId && c.status === 'approved');
+    
+    // Group by class
+    const groups = {};
+    filtered.forEach(c => {
+        const key = `${c.department} ${c.year}`;
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(c);
+    });
+    
+    let html = `<h3>Breakdown: ${elec.name}</h3><p style="color:#64748b;margin-bottom:20px;">Total Approved Candidates: ${filtered.length}</p>`;
+    
+    if (Object.keys(groups).length === 0) {
+        html += '<p class="empty-msg">No approved candidates for this election.</p>';
+    } else {
+        for (const [cls, cands] of Object.entries(groups)) {
+            html += `
+              <div class="card" style="margin-bottom:16px;border:1px solid #e2e8f0;box-shadow:none;">
+                <h4 style="margin-bottom:12px;color:#2563eb;">${cls}</h4>
+                <div class="tbl-wrap">
+                  <table>
+                    <thead><tr><th>Name</th><th>Position</th><th>Roll No</th><th>Email</th></tr></thead>
+                    <tbody>
+                      ${cands.map(c => `
+                        <tr>
+                          <td><strong>${c.name}</strong></td>
+                          <td>${c.position}</td>
+                          <td>${c.rollNumber}</td>
+                          <td>${c.email}</td>
+                        </tr>`).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </div>`;
+        }
+    }
+    document.getElementById('breakdownContent').innerHTML = html;
+  }
+
+  async function createElection() {
+    const name = document.getElementById('elecName').value.trim();
+    const type = document.getElementById('elecType').value;
+    const date = document.getElementById('elecDate').value;
+    const startTime = document.getElementById('elecStart').value;
+    const endTime = document.getElementById('elecEnd').value;
+    const scope = document.getElementById('elecScope').value.trim();
+
+    if (!name || !date || !startTime || !endTime) return alert('Fill all election fields.');
+
+    // Combine date and time
+    const startObj = new Date(`${date}T${startTime}`);
+    const endObj = new Date(`${date}T${endTime}`);
+
+    const res = await api('/api/elections', 'POST', { name, type, date, startTime: startObj, endTime: endObj, scope });
+    if (res) {
+        alert('Election created successfully!');
+        loadElections();
+        // Clear form
+        ['elecName', 'elecDate', 'elecStart', 'elecEnd'].forEach(id => document.getElementById(id).value = '');
+    }
+  }
+
+  // Global exports for onclick handlers
+  window.updateElec = async (id, status) => {
+    if (!confirm(`Switch election status to ${status}?`)) return;
+    await api(`/api/elections/status/${id}`, 'PATCH', { status });
+    loadElections();
+  };
+  window.finalizeElec = async (id) => {
+    if (!confirm('Calculate winners and finalize results? This will notify all voters.')) return;
+    await api(`/api/elections/finalize/${id}`, 'POST');
+    loadElections();
+  };
+  window.resetElec = async (id) => {
+    if (!confirm('CRITICAL: Clear all votes and restart this election?')) return;
+    await api(`/api/elections/re-election/${id}`, 'POST');
+    loadElections();
+  };
+  window.deleteElec = async (id) => {
+    if (!confirm('Delete this election permanently?')) return;
+    await api(`/api/elections/${id}`, 'DELETE');
+    loadElections();
+  };
+
+  document.getElementById('createElecBtn').addEventListener('click', createElection);
+
+  // ── Init ──────────────────────────────────────────────────────────────────────
+  (async () => {
+    try {
+      const u = await api('/api/auth/me');
+      if (u && u.role === 'admin') { 
+        currentUser = u; 
+        loadStats(); 
+        const sec = document.querySelector('.section[style*="block"]');
+        if (sec && sec.id === 'elections') loadElections();
+      }
+      else if (u !== null) window.location.href = 'login';
+    } catch(e) { console.warn('Session check failed', e); }
+  })();
+
+})();
+</script>
+</body>
+</html>

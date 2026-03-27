@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Voter Registration | eVote</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --secondary: #3b82f6;
+      --accent: #6366f1;
+      --bg-light: #f8fafc;
+      --white: #ffffff;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-300: #cbd5e1;
+      --gray-600: #475569;
+      --gray-700: #334155;
+      --gray-800: #1e293b;
+      --success: #10b981;
+      --error: #ef4444;
+      --radius-lg: 24px;
+      --radius-md: 16px;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      margin: 0;
+      background: var(--bg-light);
+      color: var(--gray-800);
+      overflow: hidden;
+    }
+
+    /* Layout Wrapper */
+    .app-container {
+      display: flex;
+      height: 100vh;
+    }
+
+    /* Left Side: Branding Panel */
+    .branding-panel {
+      flex: 1;
+      background: linear-gradient(rgba(30, 58, 138, 0.8), rgba(37, 99, 235, 0.8)), url('college_bg.png');
+      background-size: cover;
+      background-position: center;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 60px;
+      color: white;
+    }
+
+    .branding-panel::before {
+      content: '';
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      top: -300px;
+      right: -300px;
+      border-radius: 50%;
+    }
+
+    .branding-content {
+      position: relative;
+      z-index: 10;
+      max-width: 500px;
+    }
+
+    .branding-content h1 {
+      font-size: 48px;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 24px;
+    }
+
+    .branding-content p {
+      font-size: 18px;
+      opacity: 0.9;
+      line-height: 1.6;
+      margin-bottom: 40px;
+    }
+
+    .feature-list {
+      list-style: none;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      font-weight: 500;
+      font-size: 16px;
+    }
+
+    .feature-icon {
+      width: 32px;
+      height: 32px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    /* Right Side: Form Panel */
+    .form-panel {
+      width: 650px;
+      background: var(--white);
+      padding: 60px;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .header-section {
+      margin-bottom: 40px;
+    }
+
+    .header-section h2 {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--gray-800);
+      margin-bottom: 12px;
+    }
+
+    .header-section p {
+      color: var(--gray-650);
+      font-size: 16px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .form-grid > .full-width {
+      grid-column: span 2;
+    }
+
+    .input-group label {
+      display: block;
+      color: var(--gray-700);
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .input-group input,
+    .input-group select,
+    .input-group textarea {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid var(--gray-200);
+      border-radius: 12px;
+      font-size: 15px;
+      color: var(--gray-800);
+      background: var(--gray-100);
+      transition: all 0.2s ease;
+    }
+
+    .input-group input:focus,
+    .input-group select:focus,
+    .input-group textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: var(--white);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    }
+
+    /* Biometric Section */
+    .face-section {
+      background: var(--gray-100);
+      padding: 24px;
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      border: 2px dashed var(--gray-300);
+      margin-top: 20px;
+    }
+
+    .video-container {
+      width: 100%;
+      max-width: 320px;
+      aspect-ratio: 4/3;
+      border-radius: 16px;
+      overflow: hidden;
+      background: black;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    video, img#preview {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .capture-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--gray-800);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .capture-btn:hover { background: #000; }
+
+    /* Submit Button */
+    .submit-btn {
+      margin-top: 30px;
+      padding: 18px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+      transition: all 0.2s;
+    }
+
+    .submit-btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+    }
+
+    #password-requirements {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .req-chip {
+      font-size: 12px;
+      padding: 4px 10px;
+      background: var(--gray-200);
+      border-radius: 20px;
+      color: var(--gray-600);
+      font-weight: 600;
+    }
+
+    /* Responsive Styles */
+    @media (max-width: 1100px) {
+      .branding-panel { padding: 40px; }
+      .form-panel { width: 500px; padding: 40px; }
+      .branding-content h1 { font-size: 36px; }
+    }
+
+    @media (max-width: 850px) {
+      .branding-panel { display: none; }
+      .form-panel { width: 100%; max-width: 600px; margin: 0 auto; padding: 30px 20px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-grid > * { grid-column: auto !important; }
+    }
+
+    /* OTP Overlay */
+    .otp-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .otp-card {
+      background: white;
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .otp-input-box {
+      width: 100%;
+      padding: 16px;
+      border-radius: 12px;
+      border: 2px solid var(--gray-200);
+      font-size: 24px;
+      text-align: center;
+      letter-spacing: 8px;
+      margin: 24px 0;
+      font-weight: 800;
+    }
+
+    .footer-link {
+        text-align: center;
+        margin-top: 30px;
+        color: var(--gray-600);
+        font-size: 15px;
+    }
+    
+    .footer-link a {
+        color: var(--primary);
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    /* Success Overlay */
+    .success-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(10px);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .success-card {
+      background: white;
+      padding: 40px;
+      border-radius: 32px;
+      width: 100%;
+      max-width: 500px;
+      text-align: center;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      animation: slideUp 0.5s ease-out;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .success-icon {
+      width: 80px;
+      height: 80px;
+      background: #ecfdf5;
+      color: #10b981;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      margin: 0 auto 24px;
+    }
+
+    .tracking-box {
+      background: var(--gray-100);
+      border: 2px dashed var(--gray-300);
+      padding: 20px;
+      border-radius: 16px;
+      margin: 24px 0;
+    }
+
+    .tracking-number {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: 2px;
+      margin: 10px 0;
+    }
+
+    .print-btn {
+      background: var(--gray-800);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 12px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 auto;
+      transition: 0.2s;
+    }
+
+    .print-btn:hover { background: #000; }
+
+    /* Print Specific Styles */
+    @media print {
+      body > *:not(#detailedForm) { display: none !important; }
+      #detailedForm {
+        display: block !important;
+        width: 100% !important;
+        background: white !important;
+        color: black !important;
+        position: relative !important;
+        margin: 0 !important;
+        padding: 20px !important;
+      }
+      #detailedForm * { color: black !important; }
+    }
+
+    .printable-form {
+      display: none;
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px;
+      background: white;
+      color: black;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .print-header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      border-bottom: 3px solid #1e3a8a;
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+
+    .header-text h2 { margin: 0; color: #1e3a8a; font-size: 24px; }
+    .header-text p { margin: 5px 0 0; color: #666; font-size: 14px; }
+
+    .print-body {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 40px;
+      margin-bottom: 30px;
+    }
+
+    .photo-section img {
+      width: 150px;
+      height: 180px;
+      object-fit: cover;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .details-section {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .detail-item {
+      display: flex;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 5px;
+    }
+
+    .detail-item label {
+      width: 140px;
+      font-weight: 700;
+      color: #333;
+    }
+
+    .print-footer {
+      border-top: 1px solid #ddd;
+      padding-top: 20px;
+      margin-top: 40px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: #666;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-container">
+    <section class="branding-panel">
+      <div class="branding-content">
+        <h1>Vote Securely From Anywhere</h1>
+        <p>Join the next generation of institutional governance. Professional, secure, and transparent digital balloting.</p>
+        
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon">🛡️</div>
+            Biometric Face Authentication
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">⚡</div>
+            Instant Result Compilation
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">🔒</div>
+            End-to-End Encryption
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <main class="form-panel">
+        <div class="header-section">
+          <h2>Create Account</h2>
+          <p>Complete the fields below to verify your identity.</p>
+        </div>
+  
+        <div class="form-grid">
+          <div class="input-group">
+            <label>Roll Number</label>
+            <input type="text" id="rollNumber" placeholder="2024BITXXX" required>
+          </div>
+          <div class="input-group">
+            <label>PRN Number</label>
+            <input type="text" id="prn" placeholder="16-digit Number" maxlength="16" required>
+          </div>
+          <div class="input-group full-width">
+            <label>Full Legal Name</label>
+            <input type="text" id="name" placeholder="John Doe" required>
+          </div>
+          <div class="input-group full-width">
+            <label>Campus Email</label>
+            <input type="email" id="email" placeholder="john@college.edu" required>
+          </div>
+  
+          <div class="input-group">
+            <label>WhatsApp Number</label>
+            <input type="text" id="phone" placeholder="91XXXXXXXXXX" required>
+          </div>
+  
+          <div class="input-group">
+            <label>Date of Birth</label>
+            <input type="date" id="dob" required>
+          </div>
+  
+          <div class="input-group">
+            <label>Class (Dept & Year)</label>
+            <select id="classSelect" required>
+              <option value="">Loading classes...</option>
+            </select>
+          </div>
+  
+          <div class="input-group">
+            <label>Gender</label>
+            <select id="gender" required>
+              <option value="" disabled selected>Select</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+  
+          <div class="input-group full-width">
+            <label>Living Address</label>
+            <textarea id="address" placeholder="Enter full address" required rows="2"></textarea>
+          </div>
+  
+          <div class="input-group full-width">
+            <label>Address Proof (Image)</label>
+            <input type="file" id="addressProof" accept="image/*" required>
+          </div>
+  
+          <div class="input-group full-width">
+            <label>Account Password</label>
+            <input type="password" id="password" placeholder="••••••••" required>
+            <div id="password-requirements">
+                <span id="req-length" class="req-chip">• 8+ chars</span>
+                <span id="req-upper" class="req-chip">• Uppercase</span>
+                <span id="req-lower" class="req-chip">• Lowercase</span>
+                <span id="req-number" class="req-chip">• Number</span>
+                <span id="req-special" class="req-chip">• Special</span>
+            </div>
+          </div>
+  
+          <div class="input-group full-width">
+            <label>Passport Size Photo (Used for ID Card)</label>
+            <input type="file" id="passportPhoto" accept="image/*" required>
+            <p style="font-size: 11px; color: var(--gray-600); margin-top: 4px;">Max size 5MB. Must be a clear frontal face image.</p>
+          </div>
+  
+          <div class="full-width">
+            <div class="face-section">
+                <div class="video-container">
+                  <video id="video" autoplay></video>
+                  <img id="preview" style="display:none;">
+                </div>
+                <div style="width: 100%;">
+                  <h3 style="margin-bottom: 8px;">Biometric Scan</h3>
+                  <p style="color: var(--gray-600); font-size: 13px; margin-bottom: 20px;">
+                    Position your face within the frame for enrollment.
+                  </p>
+                  <button id="enrollFaceBtn" class="capture-btn">📸 Enroll Face</button>
+                </div>
+              </div>
+          </div>
+  
+          <button id="finalizeRegisterBtn" class="submit-btn full-width">Finalize Registration</button>
+          <div id="status" class="full-width" style="text-align: center; margin-top: 15px; font-weight: 600;"></div>
+        </div>
+  
+        <div class="footer-link">
+          Already have an account? <a href="login">Sign In</a>
+        </div>
+    </main>
+  </div>
+
+  <div class="otp-overlay" id="otpOverlay">
+    <div class="otp-card">
+      <h3 id="otpTitle" style="color: #111827; margin-bottom: 10px;">Verification</h3>
+      <p id="otpMsg" style="color: #6b7280; font-size: 14px; margin-bottom: 20px;">Enter code sent to your device.</p>
+      <input type="text" id="otpInput" class="otp-input-box" placeholder="123456" maxlength="6">
+      <div style="margin-bottom: 20px; font-size: 14px;">
+          <button id="resendOtpBtn" disabled style="background:none; border:none; color:var(--primary); font-weight:700; cursor:pointer; opacity:0.5;">Resend OTP</button>
+          <span id="resendTimer" style="color:var(--gray-600); margin-left:5px;">(60s)</span>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button id="cancelOtpBtn" class="capture-btn" style="flex: 1; background: #e5e7eb; color: #111827;">Cancel</button>
+        <button class="submit-btn" style="flex: 1; margin: 0;" id="otpVerifyBtn">Verify</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="success-overlay" id="successOverlay">
+    <div class="success-card" id="printableReceipt">
+      <div class="success-icon">✓</div>
+      <h2 style="font-size: 28px; margin-bottom: 10px;">Application Submitted!</h2>
+      <p style="color: var(--gray-600); line-height: 1.6;">Your voter registration has been received and is currently <strong id="resStatusText">PENDING</strong> approval.</p>
+      
+      <div class="tracking-box">
+        <p style="font-size: 12px; color: var(--gray-600); font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Your Tracking Number</p>
+        <div class="tracking-number" id="resFormNumber">REG-XXXXXX</div>
+        <p style="font-size: 13px; color: var(--gray-600);">Please save this number to check your status later.</p>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <button id="mainPrintBtn" class="print-btn" type="button">
+          <span>🖨️ Download / Print Final Form</span>
+        </button>
+        <a href="login" class="submit-btn" style="text-decoration: none; display: block; margin: 0;">Go to Login</a>
+        <a href="home" style="color: var(--gray-600); font-size: 14px; text-decoration: none; font-weight: 600;">Back to Home</a>
+      </div>
+    </div>
+
+    </div>
+  </div>
+
+  <!-- Detailed Form for Printing (Moved to root for reliability) -->
+  <div id="detailedForm" class="printable-form">
+      <div class="print-header">
+          <img src="college_bg.png" alt="Logo" style="height: 60px;">
+          <div class="header-text">
+              <h2>CAMPUS ELECTION SYSTEM</h2>
+              <p>Voter Registration Application Copy</p>
+          </div>
+      </div>
+      <div class="print-body">
+          <div class="photo-section">
+              <img id="printPhoto" src="" alt="Passport Photo">
+          </div>
+          <div class="details-section">
+              <div class="detail-item"><label>Full Name:</label> <span id="p-name"></span></div>
+              <div class="detail-item"><label>Roll Number:</label> <span id="p-roll"></span></div>
+              <div class="detail-item"><label>PRN Number:</label> <span id="p-prn"></span></div>
+              <div class="detail-item"><label>Email:</label> <span id="p-email"></span></div>
+              <div class="detail-item"><label>Phone:</label> <span id="p-phone"></span></div>
+              <div class="detail-item"><label>DOB:</label> <span id="p-dob"></span></div>
+              <div class="detail-item"><label>Gender:</label> <span id="p-gender"></span></div>
+              <div class="detail-item"><label>Class:</label> <span id="p-class"></span></div>
+              <div class="detail-item"><label>Address:</label> <span id="p-address"></span></div>
+          </div>
+      </div>
+      <div class="print-footer">
+          <div class="tracking-info">
+              <p>Tracking ID: <strong id="p-formNo"></strong></p>
+              <p>Status: <strong id="p-status">PENDING</strong></p>
+          </div>
+          <div class="timestamp">
+              Generated on: <span id="p-date"></span>
+          </div>
+      </div>
+  </div>
+
+  <canvas id="canvas" width="240" height="180" style="display:none;"></canvas>
+
+  <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js" integrity="sha384-gzn2n++arkvyhdNLmUf1s6F5NZ8iAbZ7FhIt+Zw7Jlf1n/vNTmZ3+cYr7S4ogyco" crossorigin="anonymous"></script>
+  <script>
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const preview = document.getElementById("preview");
+    const statusDiv = document.getElementById("status");
+    let modelsLoaded = false;
+    let faceDescriptor = null;
+    let passportPhotoData = null;
+    let resendTimerInterval = null;
+    let lastOtpType = 'email';
+
+    function startResendTimer() {
+        const btn = document.getElementById('resendOtpBtn');
+        const timerSpan = document.getElementById('resendTimer');
+        let timeLeft = 60;
+        
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'not-allowed';
+        
+        if (resendTimerInterval) clearInterval(resendTimerInterval);
+        
+        resendTimerInterval = setInterval(() => {
+            timeLeft--;
+            timerSpan.innerText = `(${timeLeft}s)`;
+            if (timeLeft <= 0) {
+                clearInterval(resendTimerInterval);
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                timerSpan.innerText = '';
+            }
+        }, 1000);
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    async function init() {
+      await loadClasses();
+      await loadModels();
+    }
+
+    async function loadClasses() {
+      const select = document.getElementById("classSelect");
+      try {
+        const res = await fetch('/api/classes');
+        const classes = await res.json();
+        
+        const getLevel = (admitYear, duration) => {
+            const now = new Date();
+            const curYear = now.getFullYear();
+            const curMonth = now.getMonth();
+            const academicYear = curMonth < 5 ? curYear - 1 : curYear;
+            const diff = (academicYear - admitYear) + 1;
+            if (diff <= 0) return 'Future';
+            if (diff > duration) return 'Alumni';
+            return ['FY', 'SY', 'TY', 'LY'][diff-1] || `${diff}thY`;
+        };
+
+        select.innerHTML = '<option value="">Choose your Batch</option>' +
+          classes.map(c => {
+              const level = getLevel(c.admissionYear, c.courseDuration);
+              return `<option value="${c._id}">${c.department} - ${level} (${c.admissionYear} Batch)</option>`;
+          }).join('');
+      } catch (err) {
+        select.innerHTML = '<option value="">Service offline</option>';
+      }
+    }
+
+    async function loadModels() {
+      const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+      statusDiv.innerText = "Loading AI models...";
+      try {
+        await faceapi.nets.tinyFaceDetector.load(MODEL_URL);
+        await faceapi.nets.faceLandmark68Net.load(MODEL_URL);
+        await faceapi.nets.faceRecognitionNet.load(MODEL_URL);
+        modelsLoaded = true;
+        statusDiv.innerText = "System Ready";
+        statusDiv.style.color = "#4f46e5";
+        navigator.mediaDevices.getUserMedia({ video: {} }).then(stream => video.srcObject = stream);
+      } catch (err) { statusDiv.innerText = "AI Failure"; }
+    }
+
+    // Passport Photo Upload Validation
+    document.getElementById('passportPhoto').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        if (file.size > 5 * 1024 * 1024) {
+            alert("❌ File is too large! Maximum limit is 5MB.");
+            e.target.value = '';
+            passportPhotoData = null;
+            return;
+        }
+
+        const btn = document.getElementById('finalizeRegisterBtn');
+        const originalText = btn.innerText;
+        btn.disabled = true;
+        btn.innerText = "Scanning Image...";
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const img = new Image();
+            img.onload = async () => {
+                if (!modelsLoaded) {
+                    alert("AI models are still loading. Please try again in a few seconds.");
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+                    return;
+                }
+                const detections = await faceapi.detectAllFaces(img, new faceapi.TinyFaceDetectorOptions());
+                if (detections.length === 0) {
+                    alert("❌ No human face detected in this image. Please upload a clear passport photo.");
+                    e.target.value = '';
+                    passportPhotoData = null;
+                } else if (detections.length > 1) {
+                    alert("❌ Multiple faces detected! Please ensure the photo contains ONLY your face.");
+                    e.target.value = '';
+                    passportPhotoData = null;
+                } else {
+                    passportPhotoData = event.target.result;
+                    statusDiv.innerText = "✅ Passport Photo Validated";
+                    statusDiv.style.color = "#10b981";
+                }
+                btn.disabled = false;
+                btn.innerText = originalText;
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+
+    let blinkCount = 0;
+    let isEyesClosed = false;
+    let livenessCheckActive = false;
+
+    function getEAR(eye) {
+        const dist = (p1, p2) => Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+        const v1 = dist(eye[1], eye[5]);
+        const v2 = dist(eye[2], eye[4]);
+        const h = dist(eye[0], eye[3]);
+        return (v1 + v2) / (2.0 * h);
+    }
+
+    async function capture() {
+        if (!modelsLoaded || livenessCheckActive) return;
+        livenessCheckActive = true;
+        blinkCount = 0;
+        isEyesClosed = false;
+        statusDiv.innerText = "Analyzing... Please look straight.";
+        statusDiv.style.color = "var(--primary)";
+        checkLivenessLoop();
+    }
+
+    async function checkLivenessLoop() {
+        if (!livenessCheckActive) return;
+
+        const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptors();
+
+        if (detections.length === 0) {
+            statusDiv.innerText = "❌ No face detected.";
+            statusDiv.style.color = "red";
+            requestAnimationFrame(checkLivenessLoop);
+            return;
+        }
+
+        if (detections.length > 1) {
+            statusDiv.innerText = "❌ Multiple faces detected! Please ensure you are alone.";
+            statusDiv.style.color = "red";
+            requestAnimationFrame(checkLivenessLoop);
+            return;
+        }
+
+        const landmarks = detections[0].landmarks;
+        const leftEye = landmarks.getLeftEye();
+        const rightEye = landmarks.getRightEye();
+
+        const leftEAR = getEAR(leftEye);
+        const rightEAR = getEAR(rightEye);
+        const ear = (leftEAR + rightEAR) / 2;
+
+        if (ear < 0.25) { 
+            if (!isEyesClosed) {
+                isEyesClosed = true;
+                blinkCount++;
+            }
+        } else {
+            isEyesClosed = false;
+        }
+
+        if (blinkCount >= 2 && !isEyesClosed) {
+            livenessCheckActive = false;
+            faceDescriptor = Array.from(detections[0].descriptor);
+            
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(video, 0, 0, 240, 180);
+            preview.src = canvas.toDataURL("image/png");
+            preview.style.display = "block";
+            video.style.display = "none";
+            
+            statusDiv.innerText = "✅ Face Captured Successfully";
+            statusDiv.style.color = "#10b981";
+            return;
+        } else {
+            statusDiv.innerText = `Liveness Check: Blink Twice (${blinkCount}/2). NO SUNGLASSES.`;
+            statusDiv.style.color = "var(--primary)";
+        }
+
+        requestAnimationFrame(checkLivenessLoop);
+    }
+
+    function checkPasswordStrength() {
+      const password = document.getElementById('password').value;
+      const checks = {
+        length: password.length >= 8,
+        upper: /[A-Z]/.test(password),
+        lower: /[a-z]/.test(password),
+        number: /[0-9]/.test(password),
+        special: /[@$!%*?&]/.test(password)
+      };
+      
+      const colors = { true: '#10b981', false: '#6b7280' };
+      document.getElementById('req-length').style.color = colors[checks.length];
+      document.getElementById('req-upper').style.color = colors[checks.upper];
+      document.getElementById('req-lower').style.color = colors[checks.lower];
+      document.getElementById('req-number').style.color = colors[checks.number];
+      document.getElementById('req-special').style.color = colors[checks.special];
+
+      return Object.values(checks).every(Boolean);
+    }
+
+    let registrationData = {};
+    let otpStep = 0; // 0: None, 1: Email, 2: WhatsApp
+
+    async function startRegistration() {
+      const fields = ['name', 'email', 'phone', 'password', 'dob', 'rollNumber', 'prn', 'classSelect', 'gender', 'address'];
+      for (const f of fields) {
+        if (!document.getElementById(f).value) return alert(`Mandatory: ${f}`);
+      }
+      if (!checkPasswordStrength()) return alert("Password weak");
+      if (!passportPhotoData) return alert("Please upload a valid Passport Photo (Max 5MB)");
+      if (!faceDescriptor) return alert("Biometric Face Scan required");
+
+      if (!/^\d{16}$/.test(document.getElementById('prn').value)) {
+        return alert("PRN Number must be exactly 16 digits.");
+      }
+
+      registrationData = {
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        phone: document.getElementById('phone').value,
+        password: document.getElementById('password').value,
+        dob: document.getElementById('dob').value,
+        rollNumber: document.getElementById('rollNumber').value,
+        prn: document.getElementById('prn').value,
+        classId: document.getElementById('classSelect').value,
+        gender: document.getElementById('gender').value,
+        address: document.getElementById('address').value,
+        profilePhoto: passportPhotoData,
+        faceData: preview.src,
+        faceDescriptor: faceDescriptor
+      };
+
+      await sendStepOTP('email');
+    }
+
+    async function sendStepOTP(type) {
+        lastOtpType = type;
+        const identifier = type === 'email' ? registrationData.email : registrationData.phone;
+      statusDiv.innerText = `Sending ${type} OTP...`;
+      try {
+        const res = await fetch('/api/auth/send-otp', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': getCookie('XSRF-TOKEN')
+          },
+          credentials: 'include',
+          body: JSON.stringify({ identifier, type })
+        });
+        if (res.ok) {
+          otpStep = type === 'email' ? 1 : 2;
+          document.getElementById('otpTitle').innerText = `Step ${otpStep}: Verify ${type.toUpperCase()}`;
+          document.getElementById('otpMsg').innerText = `Code sent to ${identifier}`;
+           document.getElementById('otpOverlay').style.display = 'flex';
+           document.getElementById('otpInput').value = '';
+           startResendTimer();
+        } else {
+          alert('Failed to send OTP');
+        }
+      } catch (err) { alert('OTP Service Error'); }
+    }
+
+    async function processOTP() {
+      const code = document.getElementById('otpInput').value;
+      const identifier = otpStep === 1 ? registrationData.email : registrationData.phone;
+
+      try {
+        const res = await fetch('/api/auth/verify-otp', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': getCookie('XSRF-TOKEN')
+          },
+          credentials: 'include',
+          body: JSON.stringify({ identifier, code })
+        });
+        const data = await res.json();
+        if (data.verified) {
+          if (otpStep === 1) {
+            closeOTP();
+            await sendStepOTP('whatsapp');
+          } else {
+            closeOTP();
+            await finalizeRegistration();
+          }
+        } else { alert("Wrong OTP"); }
+      } catch (err) { alert("Verification Error"); }
+    }
+
+    function closeOTP() { document.getElementById('otpOverlay').style.display = 'none'; }
+
+    async function finalizeRegistration() {
+      statusDiv.innerText = "Saving Profile...";
+      const proofFile = document.getElementById('addressProof').files[0];
+      const addressProof = await new Promise(r => {
+        const reader = new FileReader();
+        reader.onload = e => r(e.target.result);
+        reader.readAsDataURL(proofFile);
+      });
+
+        const batchId = registrationData.classId;
+        const rollNumber = registrationData.rollNumber;
+        const prn = registrationData.prn;
+
+        const body = {
+            name: registrationData.name,
+            email: registrationData.email,
+            phone: registrationData.phone,
+            password: registrationData.password,
+            dob: registrationData.dob,
+            batchId,
+            rollNumber,
+            prn,
+            gender: registrationData.gender,
+            address: registrationData.address,
+            profilePhoto: registrationData.profilePhoto,
+            faceData: registrationData.faceData,
+            faceDescriptor: registrationData.faceDescriptor,
+            addressProof
+        };
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': getCookie('XSRF-TOKEN')
+          },
+          credentials: 'include',
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById('resFormNumber').innerText = data.formNumber;
+          document.getElementById('resStatusText').innerText = data.status.toUpperCase();
+          
+          // Populate Printable Detailed Form
+          document.getElementById('p-name').innerText = registrationData.name;
+          document.getElementById('p-roll').innerText = registrationData.rollNumber;
+          document.getElementById('p-prn').innerText = registrationData.prn;
+          document.getElementById('p-email').innerText = registrationData.email;
+          document.getElementById('p-phone').innerText = registrationData.phone;
+          document.getElementById('p-dob').innerText = registrationData.dob;
+          document.getElementById('p-gender').innerText = registrationData.gender;
+          document.getElementById('p-address').innerText = registrationData.address;
+          document.getElementById('p-formNo').innerText = data.formNumber;
+          document.getElementById('p-status').innerText = data.status.toUpperCase();
+          document.getElementById('p-date').innerText = new Date().toLocaleString();
+          document.getElementById('printPhoto').src = registrationData.profilePhoto;
+          
+          const classSelect = document.getElementById('classSelect');
+          document.getElementById('p-class').innerText = classSelect.options[classSelect.selectedIndex].text;
+
+          document.getElementById('successOverlay').style.display = 'flex';
+          statusDiv.innerText = "Registration Complete";
+        } else {
+          alert(data.msg || 'Registration failed');
+        }
+      } catch (e) { alert('Server Error'); }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        init();
+        
+        const enrollBtn = document.getElementById("enrollFaceBtn");
+        const finalizeBtn = document.getElementById("finalizeRegisterBtn");
+        const cancelOtpBtn = document.getElementById("cancelOtpBtn");
+        const otpVerifyBtn = document.getElementById("otpVerifyBtn");
+        const pwdInput = document.getElementById("password");
+
+        const mainPrintBtn = document.getElementById('mainPrintBtn');
+        if (mainPrintBtn) mainPrintBtn.addEventListener('click', () => window.print());
+
+        if (enrollBtn) enrollBtn.addEventListener("click", capture);
+        if (finalizeBtn) finalizeBtn.addEventListener("click", startRegistration);
+        if (cancelOtpBtn) cancelOtpBtn.addEventListener("click", closeOTP);
+        if (otpVerifyBtn) otpVerifyBtn.addEventListener("click", processOTP);
+        if (pwdInput) pwdInput.addEventListener("keyup", checkPasswordStrength);
+        
+        const resendBtn = document.getElementById("resendOtpBtn");
+        if (resendBtn) resendBtn.addEventListener("click", () => sendStepOTP(lastOtpType));
+    });
+  </script>
+  <script src="js/location-check.js"></script>
+</body>
+
+</html>

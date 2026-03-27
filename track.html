@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Track Application | eVote</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --bg-light: #f8fafc;
+            --white: #ffffff;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --radius-lg: 24px;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: var(--bg-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: var(--gray-800);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-200);
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--gray-600);
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        input {
+            width: 100%;
+            padding: 16px 20px;
+            background: var(--gray-100);
+            border: 2px solid var(--gray-200);
+            border-radius: 16px;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--gray-800);
+            text-align: center;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: var(--white);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        .track-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+
+        .track-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .result-container {
+            margin-top: 30px;
+            display: none;
+            text-align: left;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 14px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-approved { background: #d1fae5; color: #065f46; }
+        .status-rejected { background: #fee2e2; color: #991b1b; }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .detail-label { color: var(--gray-600); font-weight: 600; }
+        .detail-value { font-weight: 700; color: var(--gray-800); }
+
+        .rejection-box {
+            background: #fff5f5;
+            border: 1px solid #feb2b2;
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 16px;
+            color: #c53030;
+        }
+
+        .footer-links {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            font-size: 14px;
+        }
+
+        .footer-links a {
+            color: var(--gray-600);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .footer-links a:hover { color: var(--primary); }
+
+        .loader {
+            display: none;
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--gray-100);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        @media print {
+            body > *:not(#detailedForm) { display: none !important; }
+            #detailedForm {
+                display: block !important;
+                width: 100% !important;
+                background: white !important;
+                color: black !important;
+                position: relative !important;
+                margin: 0 !important;
+                padding: 20px !important;
+            }
+            #detailedForm * { color: black !important; }
+        }
+
+        .printable-form {
+            display: none;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px;
+            background: white;
+            color: black;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: left;
+        }
+
+        .print-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-bottom: 3px solid #1e3a8a;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .header-text h2 { margin: 0; color: #1e3a8a; font-size: 24px; }
+        .header-text p { margin: 5px 0 0; color: #666; font-size: 14px; }
+
+        .print-body {
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+
+        .photo-section img {
+            width: 150px;
+            height: 180px;
+            object-fit: cover;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .details-section {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .detail-item {
+            display: flex;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+
+        .detail-item label {
+            width: 140px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0;
+        }
+
+        .print-footer {
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .print-option-btn {
+            background: var(--gray-800);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+            width: 100%;
+            transition: 0.2s;
+        }
+        .print-option-btn:hover { background: #000; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <h1>Track Application</h1>
+                <p>Enter your registration or candidacy tracking number to check its current status.</p>
+            </div>
+
+            <div class="input-group">
+                <input type="text" id="trackInput" placeholder="REG-XXXX or COM-XXXX" maxlength="15">
+            </div>
+
+            <button class="track-btn" id="trackBtn">Track My Status</button>
+            
+            <div class="loader" id="loader"></div>
+
+            <div class="result-container" id="resultContainer">
+                <div id="statusBadge" class="status-badge">Pending</div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Full Name</span>
+                    <span class="detail-value" id="resName">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Application Type</span>
+                    <span class="detail-value" id="resType">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Submission Date</span>
+                    <span class="detail-value" id="resDate">-</span>
+                </div>
+
+                <div id="rejectionSection" style="display: none;">
+                    <div class="rejection-box">
+                        <p style="font-weight: 800; margin-bottom: 4px;">Rejection Reason:</p>
+                        <p id="resReason">-</p>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <p style="font-size: 14px; color: var(--gray-600); margin-bottom: 12px; text-align: center;">You can correct your details and resubmit the form.</p>
+                        <a href="register" class="track-btn" style="display: block; text-decoration: none; text-align: center; background: var(--gray-800);">Refill Application</a>
+                    </div>
+                </div>
+
+                <div id="approvedSection" style="display: none; margin-top: 20px; text-align: center;">
+                    <p style="color: var(--success); font-weight: 700;">Congratulations! Your application has been approved.</p>
+                    <a href="login" class="track-btn" style="display: block; margin-top: 15px; text-decoration: none;">Proceed to Login</a>
+                </div>
+
+                <div id="pendingSection" style="display: none; margin-top: 20px; text-align: center;">
+                    <p style="color: var(--warning); font-weight: 700;">Your application is still under review. Please check back later.</p>
+                </div>
+
+                <div id="printSection" style="display: none;">
+                    <button id="trackPrintBtn" class="print-option-btn">
+                        <span>🖨️ Download / Print Registration Form</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="footer-links">
+                <a href="home">Home</a>
+                <a href="login">Login</a>
+                <a href="register">Register</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Form for Printing (Moved to root for reliability) -->
+    <div id="detailedForm" class="printable-form">
+        <div class="print-header">
+            <img src="college_bg.png" alt="Logo" id="p-logo" style="height: 60px;">
+            <div class="header-text">
+                <h2>CAMPUS ELECTION SYSTEM</h2>
+                <p>Voter Registration Application Copy</p>
+            </div>
+        </div>
+        <div class="print-body">
+            <div class="photo-section">
+                <img id="printPhoto" src="" alt="Passport Photo">
+            </div>
+            <div class="details-section">
+                <div class="detail-item"><label>Full Name:</label> <span id="p-name"></span></div>
+                <div class="detail-item"><label>Roll Number:</label> <span id="p-roll"></span></div>
+                <div class="detail-item"><label>PRN Number:</label> <span id="p-prn"></span></div>
+                <div class="detail-item"><label>Email:</label> <span id="p-email"></span></div>
+                <div class="detail-item"><label>Phone:</label> <span id="p-phone"></span></div>
+                <div class="detail-item"><label>DOB:</label> <span id="p-dob"></span></div>
+                <div class="detail-item"><label>Gender:</label> <span id="p-gender"></span></div>
+                <div class="detail-item"><label>Class:</label> <span id="p-class"></span></div>
+                <div class="detail-item"><label>Address:</label> <span id="p-address"></span></div>
+            </div>
+        </div>
+        <div class="print-footer">
+            <div class="tracking-info">
+                <p>Tracking ID: <strong id="p-formNo"></strong></p>
+                <p>Status: <strong id="p-status">PENDING</strong></p>
+            </div>
+            <div class="timestamp">
+                Generated on: <span id="p-date"></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        const trackBtn = document.getElementById('trackBtn');
+        const trackInput = document.getElementById('trackInput');
+        const loader = document.getElementById('loader');
+        const resultContainer = document.getElementById('resultContainer');
+
+        trackBtn.addEventListener('click', async () => {
+            const formNumber = trackInput.value.trim().toUpperCase();
+            if (!formNumber) return alert('Please enter a tracking number');
+
+            // UI Reset
+            resultContainer.style.display = 'none';
+            loader.style.display = 'block';
+            trackBtn.disabled = true;
+
+            try {
+                const response = await fetch(`/api/auth/track/${formNumber}`, {
+                    headers: { 'X-CSRF-Token': getCookie('XSRF-TOKEN') },
+                    credentials: 'include'
+                });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    alert(data.msg || 'Application not found');
+                } else {
+                    displayResult(data);
+                }
+            } catch (err) {
+                alert('Connection error. Please try again.');
+            } finally {
+                loader.style.display = 'none';
+                trackBtn.disabled = false;
+            }
+        });
+
+        function displayResult(data) {
+            document.getElementById('resName').innerText = data.name;
+            document.getElementById('resType').innerText = data.type;
+            document.getElementById('resDate').innerText = new Date(data.createdAt).toLocaleDateString(undefined, {
+                year: 'numeric', month: 'long', day: 'numeric'
+            });
+
+            const badge = document.getElementById('statusBadge');
+            badge.innerText = data.status;
+            badge.className = 'status-badge status-' + data.status.toLowerCase();
+
+            // Sections
+            document.getElementById('rejectionSection').style.display = data.status === 'rejected' ? 'block' : 'none';
+            document.getElementById('resReason').innerText = data.rejectionReason || 'No reason provided';
+            
+            document.getElementById('approvedSection').style.display = data.status === 'approved' ? 'block' : 'none';
+            document.getElementById('pendingSection').style.display = (data.status !== 'approved' && data.status !== 'rejected') ? 'block' : 'none';
+
+            // Handle Printable Form Population
+            if (data.type === 'Voter Registration') {
+                document.getElementById('printSection').style.display = 'block';
+                
+                // Populate the hidden printable form
+                document.getElementById('p-name').innerText = data.name;
+                document.getElementById('p-roll').innerText = data.rollNumber || 'N/A';
+                document.getElementById('p-prn').innerText = data.prn || 'N/A';
+                document.getElementById('p-email').innerText = data.email || 'N/A';
+                document.getElementById('p-phone').innerText = data.phone || 'N/A';
+                document.getElementById('p-dob').innerText = data.dob ? new Date(data.dob).toLocaleDateString() : 'N/A';
+                document.getElementById('p-gender').innerText = data.gender || 'N/A';
+                document.getElementById('p-class').innerText = `${data.department || ''} - ${data.year || ''}`;
+                document.getElementById('p-address').innerText = data.address || 'N/A';
+                document.getElementById('p-formNo').innerText = trackInput.value.toUpperCase();
+                document.getElementById('p-status').innerText = data.status.toUpperCase();
+                document.getElementById('p-date').innerText = new Date().toLocaleString();
+                
+                // Use a default user icon SVG data URI if profile photo is missing
+                const defaultUserIcon = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23666'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E";
+                document.getElementById('printPhoto').src = data.profilePhoto || defaultUserIcon;
+            } else {
+                document.getElementById('printSection').style.display = 'none';
+            }
+
+            resultContainer.style.display = 'block';
+        }
+
+        document.getElementById('trackPrintBtn').addEventListener('click', () => {
+            window.print();
+        });
+
+        // Auto-fill from URL if present
+        window.addEventListener('load', () => {
+            const params = new URLSearchParams(window.location.search);
+            const num = params.get('num');
+            if (num) {
+                trackInput.value = num;
+                trackBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>

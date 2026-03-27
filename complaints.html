@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Complaints | Campus Election System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Support Section Styles */
+    .support-section {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      margin-top: 50px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+      color: #1e293b;
+    }
+    .support-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 700;
+      color: #334155;
+      font-size: 14px;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 14px;
+      outline: none;
+      transition: 0.3s;
+    }
+    .form-group input:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .support-btn {
+      background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      transition: 0.3s;
+    }
+    .support-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
+    }
+    .tracking-card {
+      background: #f8fafc;
+      padding: 30px;
+      border-radius: 15px;
+      border: 1px dashed #cbd5e1;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 50px;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      margin-top: 10px;
+    }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-resolved { background: #dcfce7; color: #166534; }
+    .status-review { background: #e0e7ff; color: #3730a3; }
+  </style>
+</head>
+
+<body>
+
+  <header class="topbar">
+    <div class="logo">
+      <span>eVoter</span>
+      <small>Helpdesk & Feedback</small>
+    </div>
+    <nav class="nav-links">
+      <a href="home">Home</a>
+      <a href="vote">Vote</a>
+      <a href="complaints" class="active">Helpdesk</a>
+      <a href="login">Login</a>
+    </nav>
+  </header>
+
+  <main class="dashboard">
+    <div style="max-width: 800px; margin: 0 auto; width: 100%;">
+
+      <div class="election-header">
+        <h1>Helpdesk & Complaints</h1>
+        <p>Submit your concerns or check the status of previously reported issues.</p>
+      </div>
+
+
+      <div class="support-section">
+        <div class="support-grid">
+          <div>
+            <h3 style="color: #1e40af; margin-bottom: 20px; text-align: left;">Lodge a Grievance</h3>
+            <p style="text-align: left; color: #64748b; margin-bottom: 30px; font-size: 14px;">
+              Facing issues with registration or login? Use this form to reach the Election Committee directly. You will receive a tracking ID to monitor your ticket.
+            </p>
+            <form id="publicComplaintForm">
+              <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="publicName" placeholder="Enter your full name" required>
+              </div>
+              <div class="form-group">
+                <label>Institutional Email</label>
+                <input type="email" id="publicEmail" placeholder="example@college.edu" required>
+              </div>
+              <div class="form-group">
+                <label>Category</label>
+                <select id="publicCategory" required>
+                  <option value="registration">Registration Issue</option>
+                  <option value="voter">Voter Profile Issue</option>
+                  <option value="system">Technical Error</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Message / Description</label>
+                <textarea id="publicMessage" rows="4" placeholder="Describe your issue in detail..." required></textarea>
+              </div>
+              <button type="submit" class="support-btn">Submit Grievance</button>
+            </form>
+            <div id="submitResult" style="margin-top: 20px; display: none;">
+               <div style="background: #ecfdf5; border-left: 4px solid #10b981; padding: 15px; border-radius: 8px; text-align: left;">
+                  <p style="color: #065f46; font-weight: 700; margin: 0;">Submission Successful!</p>
+                  <p style="color: #047857; font-size: 13px; margin: 5px 0 0;">Save your tracking ID: <strong id="newTrackId" style="color: #065f46; font-size: 16px;"></strong></p>
+               </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 style="color: #1e40af; margin-bottom: 20px; text-align: left;">Track Your Ticket</h3>
+            <div class="tracking-card">
+              <div class="form-group">
+                <label>Tracking ID</label>
+                <div style="display: flex; gap: 10px;">
+                  <input type="text" id="trackInput" placeholder="TKT-XXXXXX" style="text-transform: uppercase;">
+                  <button type="button" id="checkTrackBtn" style="background: #334155; color: white; border: none; padding: 0 20px; border-radius: 10px; cursor: pointer;">Check</button>
+                </div>
+              </div>
+              <div id="trackResult" style="display: none; margin-top: 25px; text-align: left;">
+                 <div style="border-top: 1px solid #e2e8f0; padding-top: 20px;">
+                   <p style="font-size: 12px; color: #64748b; margin: 0;">Status for <span id="resTrackId" style="font-weight: 700;"></span></p>
+                   <div id="resStatus" class="status-badge"></div>
+                   <p id="resMsg" style="font-size: 14px; margin: 15px 0 10px; color: #1e293b;"></p>
+                   <div id="resReply" style="background: #f1f5f9; padding: 15px; border-radius: 10px; display: none;">
+                      <strong style="font-size: 12px; color: #475569; display: block; margin-bottom: 5px;">Committee Reply:</strong>
+                      <p id="replyText" style="margin: 0; font-size: 14px; color: #334155;"></p>
+                   </div>
+                   <div id="resPublicReplyForm" style="margin-top: 15px; display: none; background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                      <strong style="font-size: 13px; margin-bottom: 10px; display: block;">Send a Reply</strong>
+                      <textarea id="publicReplyMsg" rows="3" style="width: 100%; border-radius: 8px; border: 1px solid #cbd5e1; padding: 10px; font-size: 13px;" placeholder="Write your reply here..."></textarea>
+                      <input type="file" id="publicReplyAttachment" style="margin-top: 10px; font-size: 13px; width: 100%;">
+                      <button id="sendPublicReplyBtn" style="background: #2563eb; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; display: block; margin-top: 10px; font-weight: 600;">Reply</button>
+                   </div>
+                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2026 eVoter Management System | Secure • Transparent • Reliable</p>
+  </footer>
+
+  <script>
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
+              }
+          }
+      }
+      return cookieValue;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const complaintForm = document.getElementById('publicComplaintForm');
+        if (complaintForm) {
+            complaintForm.addEventListener('submit', async (e) => {
+              e.preventDefault();
+              const body = {
+                name: document.getElementById('publicName').value,
+                email: document.getElementById('publicEmail').value,
+                category: document.getElementById('publicCategory').value,
+                message: document.getElementById('publicMessage').value
+              };
+
+              try {
+                const res = await fetch('/api/helpdesk/submit', {
+                  method: 'POST',
+                  headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': getCookie('XSRF-TOKEN')
+                  },
+                  credentials: 'include',
+                  body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                if (res.ok) {
+                  document.getElementById('newTrackId').innerText = data.trackingId;
+                  document.getElementById('submitResult').style.display = 'block';
+                  e.target.reset();
+                } else {
+                  alert("Error: " + data.msg);
+                }
+              } catch (err) { alert("Submission failed"); }
+            });
+        }
+
+        const checkBtn = document.getElementById('checkTrackBtn');
+        if (checkBtn) {
+            checkBtn.addEventListener('click', trackTicket);
+        }
+    });
+
+    async function trackTicket() {
+      const id = document.getElementById('trackInput').value.trim();
+      if (!id) return;
+
+      try {
+        const res = await fetch(`/api/helpdesk/track/${id}`, {
+            headers: { 'X-CSRF-Token': getCookie('XSRF-TOKEN') },
+            credentials: 'include'
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          document.getElementById('trackResult').style.display = 'block';
+          document.getElementById('resTrackId').innerText = data.trackingId;
+          const badge = document.getElementById('resStatus');
+          badge.innerText = data.status.replace('_', ' ');
+          badge.className = 'status-badge status-' + (data.status === 'pending' ? 'pending' : data.status === 'under_review' ? 'review' : 'resolved');
+          
+          document.getElementById('resMsg').innerText = data.message;
+          
+          const adminReplyObj = data.replies ? [...data.replies].reverse().find(r => r.sender !== 'voter') : null;
+          if (adminReplyObj) {
+            document.getElementById('resReply').style.display = 'block';
+            document.getElementById('replyText').innerText = adminReplyObj.message;
+          } else {
+            document.getElementById('resReply').style.display = 'none';
+          }
+          
+          const lastReply = data.replies && data.replies.length > 0 ? data.replies[data.replies.length - 1] : null;
+          if (data.status !== 'resolved' && data.status !== 'dismissed' && lastReply && lastReply.sender !== 'voter') {
+            document.getElementById('resPublicReplyForm').style.display = 'block';
+            document.getElementById('sendPublicReplyBtn').onclick = () => submitPublicReply(data.trackingId);
+          } else {
+            document.getElementById('resPublicReplyForm').style.display = 'none';
+          }
+        } else {
+          alert(data.msg || "Ticket not found");
+        }
+      } catch (err) { alert("Tracking failed"); }
+    }
+
+    async function submitPublicReply(trackingId) {
+      const msg = document.getElementById('publicReplyMsg').value.trim();
+      if (!msg) return alert('Please enter a message');
+
+      const fileInput = document.getElementById('publicReplyAttachment');
+      const formData = new FormData();
+      formData.append('message', msg);
+      if (fileInput.files.length > 0) {
+        formData.append('attachment', fileInput.files[0]);
+      }
+
+      const btn = document.getElementById('sendPublicReplyBtn');
+      btn.innerText = 'Sending...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(`/api/helpdesk/public-reply/${trackingId}`, {
+          method: 'POST',
+          headers: { 'X-CSRF-Token': getCookie('XSRF-TOKEN') },
+          body: formData
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+          document.getElementById('publicReplyMsg').value = '';
+          fileInput.value = '';
+          alert('Reply sent successfully!');
+          trackTicket(); // refresh
+        } else {
+          alert('Error: ' + data.msg);
+        }
+      } catch (err) {
+        alert('Failed to send reply');
+      } finally {
+        btn.innerText = 'Reply';
+        btn.disabled = false;
+      }
+    }
+  </script>
+
+  <script src="chatbot.js"></script>
+</body>
+
+</html>

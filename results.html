@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Results | Campus Election System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" integrity="sha384-9nhczxUqK87bcKHh20fSQcTGD4qq5GhayNYSYWqwBkINBhOfQLg/P5HG5lF1urn4" crossorigin="anonymous"></script>
+  <style>
+    .chart-container {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      border: 2px solid #f1f5f9;
+      margin-bottom: 30px;
+      height: 400px;
+      position: relative;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="topbar">
+    <div class="logo">
+      <span>eVoter</span>
+      <small>Live Statistics</small>
+    </div>
+    <nav class="nav-links">
+      <a href="home">Home</a>
+      <a href="vote">Vote</a>
+      <a href="results" class="active">Results</a>
+      <a href="login">Login</a>
+    </nav>
+  </header>
+
+  <main class="dashboard">
+    <div class="vote-container">
+
+      <div class="election-header">
+        <h1>Election Results</h1>
+        <p>Results are published instantly after the election concludes.</p>
+
+        <div style="margin-top: 25px; display: flex; justify-content: center; gap: 15px; align-items: center;">
+          <label for="electionSelect" style="font-size: 14px; font-weight: 700; color: var(--text-dark);">Select
+            Election:</label>
+          <select id="electionSelect"
+            style="padding: 10px 20px; border-radius: 8px; border: 2px solid #e2e8f0; font-family: inherit; font-size: 14px; outline: none; transition: border-color 0.2s;">
+            <!-- Elections loaded here -->
+          </select>
+        </div>
+      </div>
+
+      <div class="election-category-tabs">
+        <button class="tab-btn active" id="classTab" data-view="class">Class Representative (CR/LR)</button>
+        <button class="tab-btn" id="genTab" data-view="general">General Council (GS/DGS)</button>
+      </div>
+
+      <!-- Live Charts Section -->
+      <div id="chartsSection" style="display: none; margin-top: 20px;">
+        <div class="chart-container">
+          <canvas id="resultsChart"></canvas>
+        </div>
+      </div>
+
+      <div id="resultsContent">
+        <div style="text-align: right; margin-bottom: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+          <button id="toggleChartsBtn"
+            style="background: none; border: 2px solid var(--primary); color: var(--primary); padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;">
+            📈 Show Visual Charts
+          </button>
+          <button id="toggleDetailedBtn"
+            style="background: none; border: 2px solid var(--secondary); color: var(--secondary); padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;">
+            📊 View Detailed Tally
+          </button>
+        </div>
+
+        <div id="detailedView"
+          style="display: none; background: #fff; padding: 25px; border-radius: 12px; border: 2px solid #f1f5f9; margin-bottom: 30px;">
+          <h2 style="font-size: 18px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+            <span>Verified Tally Report</span>
+            <small
+              style="background: #ecfdf5; color: #10b981; padding: 2px 8px; border-radius: 10px; font-size: 10px;">Official</small>
+          </h2>
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+              <tr style="border-bottom: 2px solid #f1f5f9; text-align: left;">
+                <th style="padding: 12px 10px; color: var(--text-light);">Candidate</th>
+                <th style="padding: 12px 10px; color: var(--text-light);">Position</th>
+                <th style="padding: 12px 10px; color: var(--text-light);">Party</th>
+                <th style="padding: 12px 10px; color: var(--text-light); text-align: right;">Votes</th>
+              </tr>
+            </thead>
+            <tbody id="detailedTableBody">
+              <!-- Rows loaded here -->
+            </tbody>
+          </table>
+        </div>
+
+        <div id="resultsGrid" class="candidate-grid">
+          <!-- Results loaded here -->
+        </div>
+      </div>
+
+      <div id="message" style="text-align: center; color: #ef4444; margin-top: 20px; font-weight: 600;"></div>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2026 eVoter Management System | Secure • Transparent • Reliable</p>
+  </footer>
+
+  <script>
+    let currentView = 'class';
+    let allResults = [];
+    let isDetailedVisible = false;
+    let isChartsVisible = false;
+    let myChart = null;
+
+    const originalFetch = window.fetch;
+    window.fetch = async function (...args) {
+      const response = await originalFetch(...args);
+      if (response.status === 401) {
+        localStorage.clear();
+        window.location.href = 'login';
+        return new Promise(() => { });
+      }
+      return response;
+    };
+
+    async function verifySession() {
+      try {
+        const res = await fetch('/api/auth/me', { credentials: 'include' });
+        if (!res.ok) {
+          localStorage.clear();
+          window.location.href = 'login';
+        }
+      } catch (err) { console.error("Session verification failed:", err); }
+    }
+    verifySession();
+
+    async function init() {
+      const elecSelect = document.getElementById('electionSelect');
+      try {
+        const res = await fetch('/api/elections', { credentials: 'include' });
+        const elections = await res.json();
+        const endedElections = elections.filter(e => e.status === 'ended' || e.status === 'finalized');
+
+        if (endedElections.length === 0) {
+          elecSelect.innerHTML = '<option value="">No completed elections</option>';
+          document.getElementById('resultsGrid').innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; background: #f8fafc; border-radius: 20px; border: 2px dashed #e2e8f0;">
+                <div style="font-size: 40px; margin-bottom: 20px;">📊</div>
+                <h3 style="color: var(--text-dark); margin-bottom: 10px;">Results Pending</h3>
+                <p style="color: var(--text-light); max-width: 400px; margin: 0 auto; font-size: 14px;">
+                    Elections are currently active or scheduled. Results will be published here automatically once the polls close and the tally is finalized.
+                </p>
+            </div>
+          `;
+          return;
+        }
+
+        elecSelect.innerHTML = endedElections.map(e => `
+          <option value="${e._id}" data-type="${e.type}">${e.name} (${new Date(e.date).toLocaleDateString()})</option>
+        `).join('');
+
+        // Load latest by default
+        onElectionChange(endedElections[0]._id);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function onElectionChange(id) {
+      if (!id) return;
+
+      const grid = document.getElementById('resultsGrid');
+      const msg = document.getElementById('message');
+      const select = document.getElementById('electionSelect');
+      const option = select.options[select.selectedIndex];
+      const type = option.getAttribute('data-type');
+
+      grid.innerHTML = '<p style="text-align:center; grid-column: 1/-1;">Fetching latest results...</p>';
+      msg.innerText = '';
+
+      try {
+        const res = await fetch(`/api/results/${id}`, { credentials: 'include' });
+        const data = await res.json();
+
+        if (!res.ok) {
+          msg.innerText = "⏳ " + (data.msg || "Error");
+          return;
+        }
+
+        allResults = data;
+
+        // Auto switch tab based on the election type
+        if (type === 'general') {
+          switchView('general', false);
+        } else {
+          switchView('class', false);
+        }
+
+        renderResults();
+        renderDetailedTable();
+        if (isChartsVisible) updateChart();
+      } catch (err) {
+        console.error(err);
+        grid.innerHTML = '<p style="text-align:center; grid-column: 1/-1; color: red;">Error connecting to results server.</p>';
+      }
+    }
+
+    function renderResults() {
+      const grid = document.getElementById('resultsGrid');
+      const filtered = allResults.filter(r => {
+        const pos = (r.position || "").toUpperCase();
+        if (currentView === 'class') return pos.includes('CR') || pos.includes('LR');
+        return pos.includes('GS') || pos.includes('DGS');
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '<p style="text-align:center; grid-column: 1/-1;">No results found for this category.</p>';
+        return;
+      }
+
+      filtered.sort((a, b) => b.votes - a.votes);
+      const totalVotesInCategory = filtered.reduce((sum, r) => sum + r.votes, 0);
+
+      const html = filtered.map((r, index) => {
+        const percentage = totalVotesInCategory === 0 ? 0 : (r.votes / totalVotesInCategory) * 100;
+        return `
+          <div class="service-card" style="padding: 30px; border-top: 8px solid ${index === 0 && r.votes > 0 ? 'var(--accent)' : '#cbd5e1'}; position: relative; overflow: hidden;">
+            ${index === 0 && r.votes > 0 ? `
+              <div style="position: absolute; top: 10px; right: -30px; background: var(--accent); color: var(--text-dark); padding: 5px 40px; transform: rotate(45deg); font-weight: 800; font-size: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">WINNER</div>
+            ` : ''}
+            
+            <div style="display: flex; align-items: center; margin-bottom: 20px;">
+              <div style="width: 50px; height: 50px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-right: 15px;">
+                ${index === 0 && r.votes > 0 ? '👑' : '👤'}
+              </div>
+              <div>
+                <span class="tag" style="background: ${index === 0 && r.votes > 0 ? '#fef3c7' : '#f1f5f9'}; color: ${index === 0 && r.votes > 0 ? '#92400e' : '#64748b'}; font-size: 10px;">${r.position}</span>
+                <h3 style="font-size: 18px; margin-top: 2px;">${r.candidateName}</h3>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-end;">
+              <span style="font-size: 12px; font-weight: 700; color: var(--text-light);">${r.party || 'Independent'}</span>
+              <span style="font-size: 24px; font-weight: 800; color: var(--primary);">${r.votes} <small style="font-size: 12px; font-weight: 500; color: var(--text-light);">Votes</small></span>
+            </div>
+
+            <div style="background: #f1f5f9; height: 12px; border-radius: 6px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);">
+              <div style="background: ${index === 0 && r.votes > 0 ? 'linear-gradient(90deg, var(--secondary), #60a5fa)' : '#94a3b8'}; height: 100%; width: ${percentage}%; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 6px;"></div>
+            </div>
+            
+            <div style="margin-top: 10px; display: flex; justify-content: space-between; font-size: 11px; color: var(--text-light); font-weight: 600;">
+              <span>${percentage.toFixed(1)}% Share</span>
+              <span>Verified Record</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      grid.innerHTML = html;
+    }
+
+    function renderDetailedTable() {
+      const tbody = document.getElementById('detailedTableBody');
+      const sorted = [...allResults].sort((a, b) => b.votes - a.votes);
+
+      tbody.innerHTML = sorted.map(r => `
+        <tr style="border-bottom: 1px solid #f1f5f9;">
+          <td style="padding: 12px 10px; font-weight: 600;">${r.candidateName}</td>
+          <td style="padding: 12px 10px;">${r.position}</td>
+          <td style="padding: 12px 10px; color: var(--text-light);">${r.party || 'Independent'}</td>
+          <td style="padding: 12px 10px; text-align: right; font-weight: 700; color: var(--primary);">${r.votes} Votes</td>
+        </tr>
+      `).join('');
+    }
+
+    function toggleDetailedView() {
+      const view = document.getElementById('detailedView');
+      const btn = document.getElementById('toggleDetailedBtn');
+      isDetailedVisible = !isDetailedVisible;
+
+      view.style.display = isDetailedVisible ? 'block' : 'none';
+      btn.innerText = isDetailedVisible ? '📂 Hide Detailed Tally' : '📊 View Detailed Tally';
+      btn.style.background = isDetailedVisible ? 'var(--secondary)' : 'none';
+      btn.style.color = isDetailedVisible ? 'white' : 'var(--secondary)';
+    }
+
+    function toggleChartsView() {
+      const section = document.getElementById('chartsSection');
+      const btn = document.getElementById('toggleChartsBtn');
+      isChartsVisible = !isChartsVisible;
+
+      section.style.display = isChartsVisible ? 'block' : 'none';
+      btn.innerText = isChartsVisible ? '📉 Hide Charts' : '📈 Show Visual Charts';
+      btn.style.background = isChartsVisible ? 'var(--primary)' : 'none';
+      btn.style.color = isChartsVisible ? 'white' : 'var(--primary)';
+
+      if (isChartsVisible) updateChart();
+    }
+
+    function updateChart() {
+      const filtered = allResults.filter(r => {
+        const pos = (r.position || "").toUpperCase();
+        if (currentView === 'class') return pos.includes('CR') || pos.includes('LR');
+        return pos.includes('GS') || pos.includes('DGS');
+      });
+
+      const labels = filtered.map(r => r.candidateName);
+      const votes = filtered.map(r => r.votes);
+      const colors = labels.map((_, i) => i === 0 ? '#3b82f6' : '#94a3b8');
+
+      if (myChart) myChart.destroy();
+
+      const ctx = document.getElementById('resultsChart').getContext('2d');
+      myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Votes',
+            data: votes,
+            backgroundColor: colors,
+            borderRadius: 8,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            title: {
+              display: true,
+              text: 'Voting Distribution',
+              font: { size: 16, weight: 'bold' }
+            }
+          },
+          scales: {
+            y: { beginAtZero: true, grid: { display: false } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function switchView(view, doRender = true) {
+      currentView = view;
+      document.getElementById('classTab').classList.toggle('active', view === 'class');
+      document.getElementById('genTab').classList.toggle('active', view === 'general');
+      if (doRender) {
+        renderResults();
+        if (isChartsVisible) updateChart();
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Election Change
+        const elecSelect = document.getElementById('electionSelect');
+        if (elecSelect) {
+            elecSelect.addEventListener('change', (e) => onElectionChange(e.target.value));
+        }
+
+        // View Tabs
+        document.getElementById('classTab').addEventListener('click', () => switchView('class'));
+        document.getElementById('genTab').addEventListener('click', () => switchView('general'));
+
+        // Toggle Buttons
+        const toggleChartsBtn = document.getElementById('toggleChartsBtn');
+        if (toggleChartsBtn) toggleChartsBtn.addEventListener('click', toggleChartsView);
+        const toggleDetailedBtn = document.getElementById('toggleDetailedBtn');
+        if (toggleDetailedBtn) toggleDetailedBtn.addEventListener('click', toggleDetailedView);
+
+        init();
+    });
+  </script>
+
+  <script src="chatbot.js"></script>
+</body>
+
+</html>

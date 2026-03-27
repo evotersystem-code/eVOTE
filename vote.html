@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Vote | Campus Election Management System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+  <header class="topbar">
+    <div class="logo">
+      <span>eVoter</span>
+      <small>Secure Campus Voting</small>
+    </div>
+    <nav class="nav-links">
+      <a href="home">Home</a>
+      <a href="vote" class="active">Vote</a>
+      <a href="results">Results</a>
+      <a href="login">Login</a>
+    </nav>
+  </header>
+
+  <main class="dashboard">
+    <div class="vote-container">
+
+      <!-- PROGRESS STEPPER -->
+      <div
+        style="display: flex; justify-content: space-between; max-width: 600px; margin: 0 auto 50px; position: relative;">
+        <div style="position: absolute; top: 15px; left: 0; right: 0; height: 2px; background: #e2e8f0; z-index: 1;">
+        </div>
+        <div id="step-1" class="step active" style="z-index: 2; text-align: center;">
+          <div
+            style="width: 32px; height: 32px; border-radius: 50%; background: var(--secondary); color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-weight: 700; border: 4px solid var(--white);">
+            1</div>
+          <span style="font-size: 12px; font-weight: 600; color: var(--text-dark);">Category</span>
+        </div>
+        <div id="step-2" class="step" style="z-index: 2; text-align: center;">
+          <div
+            style="width: 32px; height: 32px; border-radius: 50%; background: #e2e8f0; color: var(--text-light); display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-weight: 700; border: 4px solid var(--white);">
+            2</div>
+          <span style="font-size: 12px; font-weight: 600; color: var(--text-light);">Candidate</span>
+        </div>
+        <div id="step-3" class="step" style="z-index: 2; text-align: center;">
+          <div
+            style="width: 32px; height: 32px; border-radius: 50%; background: #e2e8f0; color: var(--text-light); display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-weight: 700; border: 4px solid var(--white);">
+            3</div>
+          <span style="font-size: 12px; font-weight: 600; color: var(--text-light);">Confirm</span>
+        </div>
+      </div>
+
+      <div class="election-header">
+        <h1 style="font-weight: 800; letter-spacing: -1px;">Digital Ballot</h1>
+        <p style="color: var(--text-light); max-width: 500px; margin: 10px auto;">Every vote is cryptographically
+          secured to ensure the highest integrity of results.</p>
+      </div>
+
+      <div class="election-category-tabs">
+        <button class="tab-btn active" id="classTab" data-type="class">Class Representatives</button>
+        <button class="tab-btn" id="genTab" data-type="general">Student Council (GS)</button>
+      </div>
+
+      <div id="candidateGrid" class="candidate-grid">
+        <!-- Candidates will be loaded here dynamically -->
+      </div>
+
+      <div class="vote-actions" style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+        <div id="cameraStatus" style="font-size: 13px; font-weight: 600; color: var(--primary);">Loading SECURE CAM...</div>
+        <div style="position: relative; width: 120px; height: 90px; border-radius: 10px; overflow: hidden; border: 2px solid var(--primary); margin-bottom: 10px;">
+           <video id="monitoringVideo" autoplay muted style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
+           <div style="position: absolute; bottom: 4px; left: 4px; font-size: 9px; background: rgba(0,0,0,0.6); color: white; padding: 2px 4px; border-radius: 4px;">LIVE FEED</div>
+        </div>
+        <button id="submitVoteBtn" class="submit-vote-btn" disabled>Cast Secure Vote</button>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2026 eVoter Management System | Secure • Transparent • Reliable</p>
+  </footer>
+
+  <script>
+    // Variables are declared below in the main script block
+
+    // Custom CSS for List Layout
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .candidate-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin-top: 20px;
+      }
+      .candidate-item {
+        display: flex;
+        align-items: center;
+        background: #fff;
+        padding: 15px 25px;
+        border-radius: 12px;
+        border: 2px solid #f1f5f9;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+      }
+      .candidate-item:hover {
+        border-color: #e2e8f0;
+        transform: translateX(5px);
+      }
+      .candidate-item.selected {
+        border-color: var(--secondary);
+        background: #f0f7ff;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+      }
+      .cand-list-img {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 20px;
+        border: 2px solid #f1f5f9;
+      }
+      .cand-list-details {
+        flex: 1;
+      }
+      .cand-list-name {
+        font-size: 18px;
+        font-weight: 700;
+        margin: 0;
+        color: var(--primary);
+      }
+      .cand-list-meta {
+        font-size: 13px;
+        color: var(--text-light);
+        font-weight: 500;
+      }
+      .cand-list-manifesto {
+        margin-top: 5px;
+        font-size: 13px;
+        color: #64748b;
+        font-style: italic;
+      }
+      .select-check {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 2px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 20px;
+      }
+      .selected .select-check {
+        background: var(--secondary);
+        border-color: var(--secondary);
+        color: white;
+      }
+    `;
+    document.head.appendChild(style);
+
+    let userProfile = null;
+    let activeElections = [];
+    let candidates = [];
+    let currentElectionType = 'class'; // default
+    let selectedCandidateId = null;
+    let isCameraSecure = false;
+    let monitoringStream = null;
+
+    const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+
+    const originalFetch = window.fetch;
+    window.fetch = async function (...args) {
+      const response = await originalFetch(...args);
+      if (response.status === 401) {
+        localStorage.clear();
+        window.location.href = 'login';
+        return new Promise(() => { });
+      }
+      return response;
+    };
+
+
+
+    async function verifySession() {
+      try {
+        const res = await fetch('/api/auth/me', { credentials: 'include' });
+        if (!res.ok) {
+          localStorage.clear();
+          window.location.href = 'login';
+        }
+      } catch (err) { console.error("Session verification failed:", err); }
+    }
+    verifySession();
+
+    async function fastLoadAll() {
+      try {
+        const [profRes, electionsRes, candRes] = await Promise.all([
+          fetch('/api/auth/me', { credentials: 'include' }),
+          fetch('/api/elections', { credentials: 'include' }),
+          fetch('/api/candidates/approved', { credentials: 'include' })
+        ]);
+
+        if (profRes.ok) userProfile = await profRes.json();
+        if (electionsRes.ok) {
+           const all = await electionsRes.json();
+           activeElections = all.filter(e => e.status === 'active');
+        }
+        if (candRes.ok) candidates = await candRes.json();
+
+        updateElectionContext();
+        await renderCandidates();
+      } catch (err) {
+        console.error("Critical Load Failure", err);
+      }
+    }
+
+    function updateElectionContext() {
+      if (!userProfile || !activeElections.length) {
+        currentElectionId = null;
+        return;
+      }
+      
+      // Find best matching election for this voter
+      // 1. Same type (class/general)
+      // 2. Either 'global' scope or matches voter's specific class (e.g. IT_SY)
+      const vClass = `${userProfile.department}_${userProfile.year}`.toUpperCase().replace(/\s+/g, '_');
+      
+      const election = activeElections.find(e => {
+        if (e.type !== currentElectionType) return false;
+        const s = (e.scope || 'global').toUpperCase();
+        return s === 'GLOBAL' || s === vClass || s === userProfile.department.toUpperCase();
+      });
+      
+      if (election) {
+        currentElectionId = election._id;
+        const heroH1 = document.querySelector('.election-header h1');
+        if (heroH1) heroH1.innerText = election.name;
+        updateStepper(1);
+      } else {
+        currentElectionId = null;
+      }
+    }
+
+    fastLoadAll();
+
+    async function renderCandidates() {
+      const grid = document.getElementById('candidateGrid');
+      const submitBtn = document.getElementById('submitVoteBtn');
+      grid.innerHTML = '<p style="text-align:center;">Filtering official candidates...</p>';
+      grid.className = "candidate-list";
+
+      if (!currentElectionId) {
+        grid.innerHTML = `<p style="text-align:center; padding: 40px; color: #64748b;">Polls for this category (${currentElectionType.toUpperCase()}) are not yet open.</p>`;
+        submitBtn.disabled = true;
+        return;
+      }
+
+      // 1. Filter by election ID first
+      let filtered = candidates.filter(c => c.electionId === currentElectionId);
+      console.log(`Filtering ${candidates.length} candidates for election: ${currentElectionId}. Found: ${filtered.length}`);
+
+      // 2. FOR CLASS REPS: Filter strictly by voter's class/dept
+      if (currentElectionType === 'class' && userProfile) {
+        filtered = filtered.filter(c =>
+          c.department === userProfile.department &&
+          c.year === userProfile.year
+        );
+        console.log("Class filter applied. Remaining:", filtered.length);
+      }
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<p style="text-align:center; padding: 40px;">No approved candidates registered for your category/class (${userProfile?.department || 'General'}).</p>`;
+        submitBtn.disabled = true;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(c => `
+        <div class="candidate-item" id="card-${c._id}" data-id="${c._id}">
+          <img class="cand-list-img" src="${c.photo || 'https://via.placeholder.com/60'}" alt="${c.name}">
+          <div class="cand-list-details">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <h3 class="cand-list-name">${c.name}</h3>
+              <span class="tag" style="padding: 2px 8px; font-size: 10px;">${c.position}</span>
+            </div>
+            <p class="cand-list-meta">${c.party || 'Independent Candidate'}</p>
+            <p class="cand-list-manifesto">"${c.manifesto || 'Integrity, transparency, and students first.'}"</p>
+          </div>
+          <div class="select-check">
+            <span style="font-size: 14px;">✓</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function switchElection(type) {
+      currentElectionType = type;
+      selectedCandidateId = null;
+      document.getElementById('submitVoteBtn').disabled = true;
+
+      document.getElementById('classTab').classList.toggle('active', type === 'class');
+      document.getElementById('genTab').classList.toggle('active', type === 'general');
+
+      updateElectionContext();
+      renderCandidates();
+    }
+
+    function selectCandidate(id) {
+      selectedCandidateId = id;
+      document.querySelectorAll('.candidate-item').forEach(card => card.classList.remove('selected'));
+      document.getElementById(`card-${id}`).classList.add('selected');
+
+      document.getElementById('submitVoteBtn').disabled = false;
+      updateStepper(2);
+    }
+
+    function updateStepper(step) {
+      document.querySelectorAll('.step').forEach((el, idx) => {
+        const dot = el.querySelector('div');
+        const text = el.querySelector('span');
+        if (idx + 1 < step) {
+          dot.style.background = '#10b981';
+          dot.innerHTML = '✓';
+        } else if (idx + 1 === step) {
+          dot.style.background = 'var(--secondary)';
+          dot.innerHTML = step;
+          text.style.color = 'var(--text-dark)';
+        } else {
+          dot.style.background = '#e2e8f0';
+          dot.style.color = 'var(--text-light)';
+          dot.innerHTML = idx + 1;
+          text.style.color = 'var(--text-light)';
+        }
+      });
+    }
+
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
+              }
+          }
+      }
+      return cookieValue;
+    }
+
+    async function castVote() {
+      if (!confirm("Confirm your choice? Your vote will be cryptographically signed and cannot be modified.")) return;
+
+      try {
+        const res = await fetch('/api/vote/cast', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': getCookie('XSRF-TOKEN')
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            candidateId: selectedCandidateId,
+            electionId: currentElectionId,
+            type: currentElectionType
+          })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          updateStepper(3);
+          alert("🎉 SUCCESS: Your vote has been recorded on the blockchain.");
+          window.location.href = "home";
+        } else {
+          alert("❌ VALIDATION ERROR: " + data.msg);
+        }
+      } catch (err) {
+        console.error(err);
+        alert("CRITICAL ERROR: Failed to reach voting gateway.");
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Election Switching
+        document.getElementById('classTab').addEventListener('click', () => switchElection('class'));
+        document.getElementById('genTab').addEventListener('click', () => switchElection('general'));
+
+        // Candidate Selection (Delegation)
+        document.getElementById('candidateGrid').addEventListener('click', (e) => {
+            const item = e.target.closest('.candidate-item');
+            if (item) {
+                selectCandidate(item.dataset.id);
+            }
+        });
+
+        // Vote Casting
+        const submitBtn = document.getElementById('submitVoteBtn');
+        if (submitBtn) submitBtn.addEventListener('click', castVote);
+
+        // Security Camera Init
+        initSecurityCamera();
+    });
+
+    async function initSecurityCamera() {
+        const statusEl = document.getElementById('cameraStatus');
+        const videoEl = document.getElementById('monitoringVideo');
+        
+        try {
+            statusEl.innerText = "Loading AI models...";
+            await faceapi.nets.tinyFaceDetector.load(MODEL_URL);
+            await faceapi.nets.faceLandmark68Net.load(MODEL_URL);
+            
+            monitoringStream = await navigator.mediaDevices.getUserMedia({ video: {} });
+            videoEl.srcObject = monitoringStream;
+            
+            statusEl.innerText = "SECURE CAM ACTIVE";
+            statusEl.style.color = "#10b981";
+            
+            monitorLivenessLoop();
+        } catch (e) {
+            statusEl.innerText = "CAMERA OFFLINE: Vote Locked";
+            statusEl.style.color = "red";
+            isCameraSecure = false;
+            enforceSecurityLock();
+        }
+    }
+
+    async function monitorLivenessLoop() {
+        const videoEl = document.getElementById('monitoringVideo');
+        const statusEl = document.getElementById('cameraStatus');
+        
+        if (videoEl.readyState === 4) {
+            const detections = await faceapi.detectAllFaces(videoEl, new faceapi.TinyFaceDetectorOptions());
+            
+            if (detections.length === 0) {
+                statusEl.innerText = "⚠️ NO FACE DETECTED! Voting Locked.";
+                statusEl.style.color = "red";
+                isCameraSecure = false;
+            } else if (detections.length > 1) {
+                statusEl.innerText = "⚠️ MULTIPLE FACES DETECTED! Voting Locked.";
+                statusEl.style.color = "red";
+                isCameraSecure = false;
+            } else {
+                statusEl.innerText = "✅ SECURE CAM ACTIVE";
+                statusEl.style.color = "#10b981";
+                isCameraSecure = true;
+            }
+            enforceSecurityLock();
+        }
+        
+        setTimeout(monitorLivenessLoop, 1000); // Check every second to save CPU
+    }
+
+    function enforceSecurityLock() {
+        const submitBtn = document.getElementById('submitVoteBtn');
+        // Only allow enabling if a candidate is actually selected AND camera is secure
+        if (selectedCandidateId && isCameraSecure) {
+            submitBtn.disabled = false;
+        } else {
+            submitBtn.disabled = true;
+        }
+    }
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js" integrity="sha384-gzn2n++arkvyhdNLmUf1s6F5NZ8iAbZ7FhIt+Zw7Jlf1n/vNTmZ3+cYr7S4ogyco" crossorigin="anonymous"></script>
+  <script src="chatbot.js"></script>
+  <script src="js/location-check.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Digital Voter ID | Campus Election System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    .id-card {
+      width: 350px;
+      background: #fff;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+      margin: 40px auto;
+      border: 1px solid #e2e8f0;
+      position: relative;
+    }
+    .id-header {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    .id-header h2 { margin: 0; font-size: 20px; letter-spacing: 1px; }
+    .id-header p { margin: 5px 0 0; font-size: 10px; opacity: 0.9; text-transform: uppercase; }
+    
+    .id-body {
+      padding: 30px;
+      text-align: center;
+    }
+    .id-photo {
+      width: 100px;
+      height: 100px;
+      background: #f1f5f9;
+      border-radius: 50%;
+      margin: 0 auto 20px;
+      border: 4px solid #fff;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+    }
+    .id-info h3 { margin: 0; font-size: 22px; color: var(--text-dark); }
+    .id-info p { margin: 5px 0; color: var(--text-light); font-size: 14px; font-weight: 600; }
+    
+    .id-footer {
+      background: #f8fafc;
+      padding: 20px;
+      border-top: 1px dashed #cbd5e1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #qrcode {
+      background: white;
+      padding: 5px;
+      border-radius: 8px;
+    }
+    .watermark {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-45deg);
+      font-size: 60px;
+      font-weight: 900;
+      color: rgba(0,0,0,0.03);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    @media print {
+      body * { visibility: hidden; }
+      #idCardArea, #idCardArea * { visibility: visible; }
+      #idCardArea { 
+        position: absolute; 
+        left: 0; 
+        top: 0; 
+        width: 100%;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .id-card {
+        border: 1px solid #ccc !important;
+        box-shadow: none !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .id-header {
+        background: #1e3a8a !important; /* Force solid blue for print compatibility */
+        color: white !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-light">
+
+  <header class="topbar">
+    <div class="logo">
+      <span>eVoter</span>
+      <small>Voter Credentials</small>
+    </div>
+    <nav class="nav-links">
+      <a href="home">Home</a>
+      <a href="voter dashboard">Dashboard</a>
+    </nav>
+  </header>
+
+  <main class="dashboard" style="max-width: 800px;">
+    <div class="vote-container">
+      <div class="election-header">
+        <h1>Digital Voter ID</h1>
+        <p>Generate your secure voter identification card for campus elections.</p>
+      </div>
+
+      <div class="service-card" style="max-width: 500px; margin: 0 auto;">
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; font-size: 14px; font-weight: 700; margin-bottom: 8px;">College Roll Number</label>
+          <input type="text" id="rollNo" placeholder="E.g. 21BIT001" 
+            style="width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #e2e8f0; font-size: 16px; outline: none;">
+        </div>
+        <button id="generateBtn" class="submit-vote-btn" style="width: 100%;">
+          ✨ Generate Secure ID
+        </button>
+      </div>
+
+      <div id="idCardArea" style="display: none;">
+        <div class="id-card">
+          <div class="watermark">OFFICIAL</div>
+          <div class="id-header">
+            <h2>VOTER ID CARD</h2>
+            <p>Campus Election System 2026</p>
+          </div>
+          <div class="id-body">
+            <div class="id-photo">👤</div>
+            <div class="id-info">
+              <h3 id="dispName">STUDENT NAME</h3>
+              <p id="dispRoll">ROLL: 21BIT001</p>
+              <div style="margin-top: 15px;">
+                <span class="tag" style="background: #ecfdf5; color: #10b981; font-size: 10px; padding: 4px 12px; border-radius: 20px; font-weight: 800;">VERIFIED VOTER</span>
+              </div>
+            </div>
+          </div>
+          <div class="id-footer">
+            <div id="qrcode"></div>
+          </div>
+        </div>
+        <div style="text-align: center; margin-top: 20px;">
+          <button id="printBtn" class="tab-btn active">🖨️ Print / Save as PDF</button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="js/app.js"></script>
+  <script>
+    async function generateID() {
+      const roll = document.getElementById('rollNo').value.trim();
+      if (!roll) return alert('Please enter your roll number');
+
+      try {
+        // Here we could fetch student info from an API
+        // For now, we simulate finding the student
+        document.getElementById('dispRoll').innerText = `ROLL: ${roll}`;
+        document.getElementById('dispName').innerText = "Voter " + roll;
+
+        // Clear previous QR
+        document.getElementById('qrcode').innerHTML = "";
+        
+        // Generate new QR
+        new QRCode(document.getElementById("qrcode"), {
+          text: `VOTERID:${roll}:SESSION2026`,
+          width: 80,
+          height: 80,
+          colorDark : "#1e293b",
+          colorLight : "#ffffff",
+          correctLevel : QRCode.CorrectLevel.H
+        });
+
+        document.getElementById('idCardArea').style.display = 'block';
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      } catch (err) {
+        console.error(err);
+        alert('Could not generate ID. Please try again.');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const generateBtn = document.getElementById('generateBtn');
+        if (generateBtn) generateBtn.addEventListener('click', generateID);
+
+        const printBtn = document.getElementById('printBtn');
+        if (printBtn) printBtn.addEventListener('click', () => window.print());
+    });
+  </script>
+</body>
+</html>
+

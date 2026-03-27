@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voter Verification | eVote Central</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --success: #059669;
+            --error: #dc2626;
+            --bg: #f8fafc;
+            --text: #0f172a;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        body { background: var(--bg); color: var(--text); display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+        
+        .verify-container {
+            width: 100%;
+            max-width: 480px;
+            background: white;
+            border-radius: 32px;
+            overflow: hidden;
+            box-shadow: 0 40px 80px -20px rgba(0,0,0,0.15);
+            text-align: center;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header { background: var(--primary); color: white; padding: 40px 20px; }
+        .header h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
+        .header p { opacity: 0.8; font-size: 14px; margin-top: 8px; font-weight: 500; }
+
+        .content { padding: 40px; }
+        
+        .photo-frame {
+            width: 140px;
+            height: 140px;
+            border-radius: 24px;
+            margin: 0 auto 30px;
+            border: 5px solid #f1f5f9;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            background: #f8fafc;
+        }
+        .photo-frame img { width: 100%; height: 100%; object-fit: cover; }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 24px;
+            border-radius: 50px;
+            background: #ecfdf5;
+            color: var(--success);
+            font-weight: 800;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .error-badge {
+            background: #fef2f2;
+            color: var(--error);
+        }
+
+        .voter-name { font-size: 28px; font-weight: 800; color: var(--text); margin-bottom: 12px; }
+        
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 15px;
+        }
+        .detail-label { color: #64748b; font-weight: 600; }
+        .detail-value { color: var(--text); font-weight: 700; }
+
+        .footer-note {
+            padding: 24px;
+            background: #f8fafc;
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f1f5f9;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 40px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="verify-container" id="mainContainer">
+        <div id="loader">
+            <div class="spinner"></div>
+            <p style="margin-bottom: 40px; color: #64748b; font-weight: 500;">Verifying Credentials...</p>
+        </div>
+
+        <div id="verifyResult" style="display: none;">
+            <div class="header">
+                <h1>Official Voter Record</h1>
+                <p>INSTITUTIONAL VOTING SYSTEM • 2026</p>
+            </div>
+            
+            <div class="content">
+                <div id="statusBadge" class="status-badge">
+                    <span id="statusIcon">✓</span> 
+                    <span id="statusText">VERIFIED VOTER</span>
+                </div>
+
+                <div class="photo-frame">
+                    <img id="voterPhoto" src="" alt="Voter">
+                </div>
+
+                <div class="voter-name" id="voterName">-</div>
+                
+                <div class="details-grid" id="detailsGrid">
+                    <div class="detail-item">
+                        <span class="detail-label">Roll Number</span>
+                        <span class="detail-value" id="voterRoll">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Department</span>
+                        <span class="detail-value" id="voterDept">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Batch / Year</span>
+                        <span class="detail-value" id="voterYear">-</span>
+                    </div>
+                </div>
+
+                <p id="errorMsg" style="display: none; color: var(--error); font-weight: 600; padding: 20px;"></p>
+            </div>
+
+            <div class="footer-note">
+                This record is generated by eVote Central. Verification is performed in real-time against the secure institutional database.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function runVerification() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const voterId = urlParams.get('id');
+            const loader = document.getElementById('loader');
+            const result = document.getElementById('verifyResult');
+
+            if (!voterId) {
+                showError("No Access Key Provided", "This QR code appears to be missing essential verification information.");
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/auth/verify-voter/${voterId}`);
+                const data = await res.json();
+
+                loader.style.display = 'none';
+                result.style.display = 'block';
+
+                if (!res.ok) {
+                    showError("Unknown or Expired ID", data.msg || "This voter identity cannot be verified at this time.");
+                    return;
+                }
+
+                // Populate data
+                document.getElementById('voterName').innerText = data.name;
+                document.getElementById('voterRoll').innerText = data.rollNumber;
+                document.getElementById('voterDept').innerText = data.department;
+                document.getElementById('voterYear').innerText = data.year;
+                
+                if (data.photo) {
+                    document.getElementById('voterPhoto').src = data.photo;
+                } else {
+                    document.getElementById('voterPhoto').src = "https://ui-avatars.com/api/?name=" + encodeURIComponent(data.name) + "&background=1e3a8a&color=fff&size=256";
+                }
+
+                // If somehow status is not approved, show warning
+                if (data.status !== 'approved' && data.status !== 'verified') {
+                    const sb = document.getElementById('statusBadge');
+                    sb.className = 'status-badge error-badge';
+                    document.getElementById('statusIcon').innerText = "⚠️";
+                    document.getElementById('statusText').innerText = "RESTRICTED ACCESS";
+                    document.getElementById('detailsGrid').style.opacity = '0.4';
+                }
+
+            } catch (err) {
+                showError("Connection Error", "A technical issue occurred while connecting to the verification server.");
+            }
+        }
+
+        function showError(title, msg) {
+            document.getElementById('loader').style.display = 'none';
+            const result = document.getElementById('verifyResult');
+            result.style.display = 'block';
+
+            document.getElementById('voterName').innerText = title;
+            document.getElementById('voterName').style.color = 'var(--error)';
+            
+            const sb = document.getElementById('statusBadge');
+            sb.className = 'status-badge error-badge';
+            document.getElementById('statusIcon').innerText = "✕";
+            document.getElementById('statusText').innerText = "VERIFICATION FAILED";
+
+            document.getElementById('voterPhoto').src = "https://via.placeholder.com/150?text=!";
+            document.getElementById('detailsGrid').style.display = 'none';
+            
+            const errorP = document.getElementById('errorMsg');
+            errorP.innerText = msg;
+            errorP.style.display = 'block';
+        }
+
+        window.onload = runVerification;
+    </script>
+</body>
+</html>

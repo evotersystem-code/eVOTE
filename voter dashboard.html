@@ -1,0 +1,1676 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voter Central | eVote Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1e40af;
+      --secondary: #6366f1;
+      --accent: #f59e0b;
+      --bg: #f8fafc;
+      --white: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --glass: rgba(255, 255, 255, 0.7);
+      --card-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      width: 280px;
+      background: linear-gradient(180deg, #1e3a8a 0%, #1e1b4b 100%);
+      color: white;
+      padding: 40px 25px;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      height: 100vh;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 50px;
+      padding: 0 10px;
+    }
+
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+      background: var(--white);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .brand-name {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .nav-links {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .nav-link {
+      color: rgba(255, 255, 255, 0.6);
+      text-decoration: none;
+      padding: 14px 18px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .nav-link.active {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+    }
+
+    .nav-link:hover:not(.active) {
+      background: rgba(255, 255, 255, 0.05);
+      color: white;
+    }
+
+    /* Main Content Area */
+    .main-content {
+      flex: 1;
+      margin-left: 280px;
+      padding: 40px 60px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 40px;
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      background: var(--white);
+      padding: 8px 18px;
+      border-radius: 50px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      background: #e2e8f0;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: var(--primary);
+      border: 2px solid var(--white);
+      box-shadow: 0 0 0 2px var(--primary);
+    }
+
+    .welcome-text h1 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    .welcome-text p {
+      color: var(--text-muted);
+      margin-top: 5px;
+    }
+
+    /* Dashboard Grid */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 30px;
+    }
+
+    @media (max-width: 992px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .main-content {
+        margin-left: 0 !important;
+      }
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: 24px;
+      padding: 30px;
+      box-shadow: var(--card-shadow);
+      border: 1px solid rgba(0, 0, 0, 0.02);
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 25px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Candidate Visual Cards */
+    .candidate-scroll {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .candidate-card {
+      background: #f8fafc;
+      border-radius: 20px;
+      padding: 20px;
+      text-align: center;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid transparent;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .candidate-card:hover {
+      transform: translateY(-8px);
+      background: white;
+      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
+      border-color: var(--primary);
+    }
+
+    .candidate-img-wrapper {
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 15px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 4px solid white;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .candidate-img-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .candidate-name {
+      font-weight: 700;
+      font-size: 16px;
+      margin-bottom: 5px;
+    }
+
+    .candidate-role {
+      font-size: 12px;
+      color: var(--primary);
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    /* Vote Status Radar */
+    .status-radar {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .status-item {
+      padding: 20px;
+      background: #f8fafc;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .status-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .status-icon-box {
+      width: 45px;
+      height: 45px;
+      background: white;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 5px 10px rgba(0, 0, 0, 0.03);
+    }
+
+    .badge {
+      padding: 6px 12px;
+      border-radius: 50px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .badge-voted {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .badge-pending {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .status-resolved { background: #d1fae5; color: #059669; }
+    .status-dismissed { background: #f1f5f9; color: #64748b; }
+    .status-review { background: #e0f2fe; color: #0369a1; }
+    .pending { background: #fef3c7; color: #d97706; }
+
+    .action-btn {
+      background: var(--primary);
+      color: white;
+      text-decoration: none;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 13px;
+      transition: 0.3s;
+    }
+
+    .action-btn:hover {
+      background: var(--primary-dark);
+      transform: scale(1.05);
+    }
+
+    .logout-btn {
+      margin-top: auto;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fca5a5;
+    }
+
+    .logout-btn:hover {
+      background: #ef4444;
+      color: white;
+    }
+
+    /* Animation */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-in {
+      animation: fadeInUp 0.5s ease forwards;
+    }
+
+    /* AI ENHANCEMENTS STYLES */
+    .ai-summary-modal {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(15, 23, 42, 0.8);
+        backdrop-filter: blur(8px);
+        z-index: 2000;
+        justify-content: center;
+        align-items: center;
+    }
+    .ai-modal-content {
+        background: white;
+        width: 90%;
+        max-width: 500px;
+        border-radius: 28px;
+        padding: 40px;
+        position: relative;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+    .ai-badge {
+        background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 50px;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        display: inline-block;
+        margin-bottom: 15px;
+    }
+
+
+    
+
+    /* Threaded Grievance Styles */
+    .ticket-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    .ticket-item {
+        background: #f8fafc;
+        border-radius: 15px;
+        padding: 20px;
+        border: 1px solid #e2e8f0;
+        transition: 0.3s;
+    }
+    .ticket-item:hover {
+        background: white;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .ticket-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+    .ticket-id {
+        font-size: 11px;
+        font-weight: 800;
+        color: var(--primary);
+        background: #eff6ff;
+        padding: 4px 10px;
+        border-radius: 6px;
+    }
+    .ticket-reply {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px dashed #cbd5e1;
+        font-size: 13px;
+        color: #475569;
+    }
+    .ticket-status {
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        padding: 4px 8px;
+        border-radius: 4px;
+    }
+    .status-pending { background: #fef3c7; color: #d97706; }
+    .status-resolved { background: #d1fae5; color: #059669; }
+    .status-dismissed { background: #f1f5f9; color: #64748b; }
+    .status-review { background: #e0f2fe; color: #0369a1; }
+  </style>
+
+<style>
+    /* Voter ID Card Styling */
+    .id-card-overlay {
+        position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(10px);
+        z-index: 3000; display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    .voter-id-card {
+        background: white; width: 100%; max-width: 400px; border-radius: 24px; overflow: hidden;
+        box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.2); position: relative;
+    }
+    .id-card-header { background: #1e3a8a; color: white; padding: 24px; text-align: center; }
+    .id-card-header h2 { font-size: 14px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
+    .id-card-header p { font-size: 10px; opacity: 0.8; font-weight: 600; letter-spacing: 1px; }
+    .id-card-body { padding: 30px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+    .id-photo-container { width: 140px; height: 140px; border-radius: 20px; overflow: hidden; border: 4px solid #f1f5f9; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 24px; background: #f8fafc; }
+    .id-photo-container img { width: 100%; height: 100%; object-fit: cover; }
+    .id-name { font-size: 24px; font-weight: 800; color: #0f172a; margin-bottom: 8px; }
+    .id-details { width: 100%; margin-top: 10px; border-top: 1px solid #f1f5f9; padding-top: 15px; }
+    .id-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
+    .id-label { color: #64748b; font-weight: 600; }
+    .id-value { color: #1e293b; font-weight: 700; }
+    .id-card-footer { padding: 24px; background: #f8fafc; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; }
+    .qr-container { width: 80px; height: 80px; background: transparent; padding: 0; border: none; }
+    .status-badge { background: #ecfdf5; color: #059669; padding: 6px 14px; border-radius: 50px; font-size: 11px; font-weight: 800; display: flex; align-items: center; gap: 6px; }
+    .id-card-actions { display: flex; gap: 12px; margin-top: 24px; width: 100%; }
+    .id-btn { flex: 1; padding: 14px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+    .id-btn-print { background: #1e293b; color: white; }
+    .id-btn-close { background: #f1f5f9; color: #475569; }
+    @media print {
+        body * { visibility: hidden !important; }
+        #voterIdSection, #voterIdSection * { visibility: visible !important; }
+        #voterIdSection { 
+            position: absolute !important; 
+            inset: 0 !important; 
+            display: flex !important; 
+            align-items: center; 
+            justify-content: center;
+            background: white !important;
+            z-index: 9999 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        .voter-id-card { 
+            box-shadow: none !important; 
+            border: 1px solid #ccc !important; 
+            margin: 0 auto !important; 
+            transform: none !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        .id-card-header { background-color: #1e3a8a !important; color: white !important; }
+        .id-card-actions { display: none !important; }
+        .qr-container { border: 1px solid #000 !important; }
+    }
+</style>
+</head>
+
+<body>
+
+  <!-- Mobile Header -->
+  <div class="mobile-nav-toggle mobile-only">
+    <button id="mobileNavToggle"
+      style="background: none; border: none; font-size: 24px; color: var(--primary);">&#9776;</button>
+    <span style="font-weight: 800; margin-left: 10px;">eVote Central</span>
+  </div>
+
+  <nav class="sidebar" id="dashboardSidebar">
+    <div class="brand">
+      <div class="brand-logo">V</div>
+      <span class="brand-name">eVote Central</span>
+    </div>
+
+    <div class="nav-links">
+      <a href="#" class="nav-link active" data-section="dashboard"><span>🏠</span> Dashboard</a>
+      <a href="vote" class="nav-link"><span>🗳️</span> Ballot Box</a>
+      <a href="results" class="nav-link"><span>📊</span> Live Results</a>
+      <a href="#" class="nav-link" id="navCandidate" data-section="candidatePortal"><span>📣</span>
+        Candidate Portal</a>
+      <a href="#" class="nav-link" id="navProfile" data-section="profileSettings"><span>👤</span>
+        Profile Settings</a>
+      <a href="#" class="nav-link" id="navSupport" data-section="supportDesk"><span>📁</span> Support Desk</a>
+      <a href="#" class="nav-link" id="viewIDCardBtn" data-section="voterIdSection"><span>🆔</span> Verifiable ID</a>
+    </div>
+
+    <a href="#" class="nav-link logout-btn" id="logoutBtn"><span>🔓</span> Terminate Session</a>
+  </nav>
+
+  <main class="main-content">
+    <header>
+      <div class="welcome-text">
+        <p id="currentDate"
+          style="font-size: 12px; font-weight: 600; color: var(--primary); text-transform: uppercase; margin-bottom: 5px;">
+        </p>
+        <h1>Hey, <span id="voterName">Voter</span></h1>
+        <p>Your democratic hub is ready. Make your choice count.</p>
+      </div>
+
+      <div class="user-profile">
+        <div class="avatar" id="avatarLetter">V</div>
+        <div style="text-align: right;">
+          <p id="voterDept" style="font-weight: 700; font-size: 14px; margin-bottom: -2px;"></p>
+          <p id="voterRoll" style="font-size: 11px; color: var(--text-muted);"></p>
+          <p id="voterForm" style="font-size: 10px; color: var(--primary); font-weight: 700; margin-top: 2px;"></p>
+          <p id="voterApprover" style="font-size: 9px; color: #64748b; font-style: italic; margin-top: 2px;"></p>
+        </div>
+      </div>
+    </header>
+        
+        
+    </div>
+
+    <div class="dashboard-grid">
+      <div class="card animate-in">
+        <div class="card-title">
+          <span>Current Candidates</span>
+          <a href="vote" style="font-size: 13px; color: var(--primary); text-decoration: none;">View All →</a>
+        </div>
+        <div class="candidate-scroll" id="candidateList">
+          <!-- Candidates from IT and General seeded dynamically -->
+          <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">
+            Fetching official candidates...
+          </div>
+        </div>
+      </div>
+
+      <div class="card animate-in" style="animation-delay: 0.1s;">
+        <div class="card-title">
+          <span>Election Countdown</span>
+          <span
+            style="font-size: 11px; background: #fff7ed; color: #c2410c; padding: 4px 10px; border-radius: 6px;">Polls
+            Closing Soon</span>
+        </div>
+        <div id="countdown"
+          style="font-size: 32px; font-weight: 800; text-align: center; color: var(--primary); margin: 15px 0;">
+          00:00:00:00
+        </div>
+        <div
+          style="display: flex; justify-content: space-around; font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">
+          <span>Days</span>
+          <span>Hrs</span>
+          <span>Min</span>
+          <span>Sec</span>
+        </div>
+      </div>
+
+      <div class="card animate-in" style="animation-delay: 0.15s; grid-column: span 1;">
+        <div class="card-title">
+          <span>Ballot Progress</span>
+        </div>
+        <div class="status-radar">
+          <div class="status-item">
+            <div class="status-info">
+              <div class="status-icon-box">🛡️</div>
+              <div>
+                <p style="font-size: 14px; font-weight: 700;">Representative</p>
+                <p style="font-size: 11px; color: var(--text-muted);">CR & LR Election</p>
+              </div>
+            </div>
+            <span class="badge" id="crStatus">Pending</span>
+          </div>
+
+          <div class="status-item">
+            <div class="status-info">
+              <div class="status-icon-box">🎓</div>
+              <div>
+                <p style="font-size: 14px; font-weight: 700;">General Secretary</p>
+                <p style="font-size: 11px; color: var(--text-muted);">GS & DGS Election</p>
+              </div>
+            </div>
+            <span class="badge" id="gsStatus">Pending</span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div id="candidatePortal" class="section animate-in" style="display: none; margin-top: 30px;">
+      <div class="card">
+        <div class="card-title">
+          <span>Candidate Application</span>
+          <span id="appStatus" class="badge">Not Applied</span>
+          <span id="candFormNum" style="font-size: 11px; margin-left: 10px; color: var(--primary); font-weight: 800;"></span>
+        </div>
+        <div id="appFormContainer">
+          <form id="candidateApplyForm">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+              <div class="status-radar"
+                style="grid-column: span 2; background: #f1f5f9; padding: 15px; border-radius: 12px; margin-bottom: 10px;">
+                <p style="font-size: 13px; color: #475569;">Apply to represent your class or the entire institution.
+                  Note: GS/DGS positions require a previous CR/LR win.</p>
+              </div>
+
+              <div class="status-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+                <label style="font-weight: 700; font-size: 14px;">Running for Position</label>
+                <select id="candPosition" required
+                  style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                  <option value="CR">Class Representative (CR)</option>
+                  <option value="LR">Leadership Representative (LR)</option>
+                  <option value="GS" id="optGS">General Secretary (GS)</option>
+                  <option value="DGS" id="optDGS">Deputy General Secretary (DGS)</option>
+                </select>
+                <p id="eligibilityMsg" style="font-size: 10px; color: #ef4444; display: none;">GS/DGS requires previous
+                  CR/LR win.</p>
+              </div>
+
+              <div class="status-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+                <label style="font-weight: 700; font-size: 14px;">Party / Group Name</label>
+                <input type="text" id="candParty" placeholder="Independent or Group Name" required
+                  style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+              </div>
+
+              <div class="status-item"
+                style="flex-direction: column; align-items: flex-start; gap: 10px; grid-column: span 2;">
+                <label style="font-weight: 700; font-size: 14px;">Campaign Manifesto</label>
+                <textarea id="candManifesto" placeholder="What are your goals?" required
+                  style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; min-height: 100px;"></textarea>
+              </div>
+
+              <div class="status-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+                <label style="font-weight: 700; font-size: 14px;">Campaign Photo (High Quality)</label>
+                <input type="file" id="candPhoto" accept="image/*" required
+                  style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+              </div>
+
+              <div class="status-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+                <label style="font-weight: 700; font-size: 14px;">Current Address & Proof (Optional Update)</label>
+                <input type="file" id="candAddressProof" accept="image/*"
+                  style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+              </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+              <button type="submit" class="action-btn" style="width: 100%; padding: 15px; font-size: 16px;">Submit
+                Application</button>
+            </div>
+          </form>
+        </div>
+        <div id="alreadyApplied" style="display: none; text-align: center; padding: 40px;">
+          <div style="font-size: 48px; margin-bottom: 20px;">📑</div>
+          <h3 id="appHeader">Application Under Review</h3>
+          <p id="appDetail" style="color: #64748b; margin-top: 10px;">Your candidacy application has been submitted and
+            is
+            currently being processed by the Election Committee.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE SETTINGS SECTION -->
+    <div id="profileSettings" class="section animate-in" style="display: none; margin-top: 30px;">
+      <div class="card">
+        <div class="card-title">
+          <span>Profile Settings</span>
+          <span style="font-size: 11px; color: var(--text-muted);">Roll Number cannot be changed</span>
+        </div>
+        <form id="profileUpdateForm">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="status-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+              <label style="font-weight: 700; font-size: 14px;">Full Name</label>
+              <input type="text" id="profName" required
+                style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            </div>
+            <div class="status-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+              <label style="font-weight: 700; font-size: 14px;">Campus Email</label>
+              <input type="email" id="profEmail" required
+                style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            </div>
+            <div class="status-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+              <label style="font-weight: 700; font-size: 14px;">Gender</label>
+              <select id="profGender" required
+                style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="status-item"
+              style="flex-direction: column; align-items: flex-start; gap: 10px; grid-column: span 2;">
+              <label style="font-weight: 700; font-size: 14px;">Residential Address</label>
+              <textarea id="profAddress" required
+                style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; min-height: 80px;"></textarea>
+            </div>
+
+          </div>
+          <button type="submit" class="action-btn"
+            style="width: 100%; padding: 15px; font-size: 16px; margin-top: 25px;">Update Profile Details</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Grievance History -->
+    <div id="supportDesk" class="section animate-in" style="display: none; margin-top: 30px;">
+      <!-- File a Grievance Form -->
+      <div class="card" style="margin-bottom: 20px;">
+        <div class="card-title">File a Support Ticket</div>
+        <form id="voterGrievanceForm">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="status-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+              <label style="font-weight: 700; font-size: 14px;">Category</label>
+              <select id="grievanceCategory" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <option value="registration">Registration Issue</option>
+                <option value="voter">Voter Profile Issue</option>
+                <option value="candidate">Candidate Issue</option>
+                <option value="system">Technical Error</option>
+              </select>
+            </div>
+            <div class="status-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+              <label style="font-weight: 700; font-size: 14px;">Address To</label>
+              <select id="grievanceTarget" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <option value="committee">Election Committee</option>
+                <option value="admin">System Admin</option>
+              </select>
+            </div>
+            <div class="status-item" style="flex-direction: column; align-items: flex-start; gap: 10px; grid-column: span 2;">
+              <label style="font-weight: 700; font-size: 14px;">Message</label>
+              <textarea id="grievanceMessage" required placeholder="Describe your issue..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; min-height: 80px;"></textarea>
+            </div>
+            <div class="status-item" style="flex-direction: column; align-items: flex-start; gap: 10px; grid-column: span 2;">
+              <label style="font-weight: 700; font-size: 14px;">Attachments (Max 5MB)</label>
+              <input type="file" id="grievanceAttachment" accept="image/*,.pdf,.doc,.docx" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            </div>
+          </div>
+          <button type="submit" class="action-btn" style="width: 100%; padding: 15px; font-size: 16px; margin-top: 20px;">Submit Ticket</button>
+        </form>
+      </div>
+      <div class="card">
+        <div class="card-title">Ticket Tracking History</div>
+        <div id="voterTicketList" class="ticket-list">
+          <p style="text-align: center; color: var(--text-muted); padding: 40px;">No support tickets found.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Verifiable ID Section (Tab View) -->
+    <div id="voterIdSection" class="section animate-in" style="display: none; margin-top: 30px;">
+      <div id="idCardErrorView" style="display: none; text-align: center; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+        <div style="font-size: 48px; margin-bottom: 20px;">🔒</div>
+        <h3 id="idCardErrorTitle" style="color: #ef4444; font-size: 20px;">Access Restricted</h3>
+        <p id="idCardErrorText" style="color: #64748b; margin-top: 10px; font-size: 14px;">ID Card is only available for fully verified voters.</p>
+      </div>
+
+      <div class="card" id="idCardSuccessView" style="display: none; padding: 40px; background: #f8fafc; align-items: center; justify-content: center;">
+        <div class="voter-id-card" style="margin: 0 auto; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.15); width: 100%; max-width: 400px; border-radius: 24px; overflow: hidden; background: white; border: 1px solid rgba(255, 255, 255, 0.2); position: relative;">
+            <div class="id-card-header" style="background: #1e3a8a; color: white; padding: 24px; text-align: center;">
+                <h2 style="font-size: 14px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px;">Voter Identity Card</h2>
+                <p style="font-size: 10px; opacity: 0.8; font-weight: 600; letter-spacing: 1px;">INSTITUTIONAL VOTING SYSTEM • 2026</p>
+            </div>
+            <div class="id-card-body" style="padding: 30px; display: flex; flex-direction: column; align-items: center; text-align: center;">
+                <div class="id-photo-container" style="width: 140px; height: 140px; border-radius: 20px; overflow: hidden; border: 4px solid #f1f5f9; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 24px; background: #f8fafc;">
+                    <img id="idCardPhoto" src="https://via.placeholder.com/150" alt="Voter Photo" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <div class="id-name" id="idCardName" style="font-size: 24px; font-weight: 800; color: #0f172a; margin-bottom: 8px;">Student Name</div>
+                <div class="id-details" style="width: 100%; margin-top: 10px; border-top: 1px solid #f1f5f9; padding-top: 15px;">
+                    <div class="id-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;"><span class="id-label" style="color: #64748b; font-weight: 600;">Roll Number</span><span class="id-value" id="idCardRoll" style="color: #1e293b; font-weight: 700;">-</span></div>
+                    <div class="id-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;"><span class="id-label" style="color: #64748b; font-weight: 600;">PRN Number</span><span class="id-value" id="idCardPRN" style="color: #1e293b; font-weight: 700;">-</span></div>
+                    <div class="id-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;"><span class="id-label" style="color: #64748b; font-weight: 600;">Department</span><span class="id-value" id="idCardDept" style="color: #1e293b; font-weight: 700;">-</span></div>
+                    <div class="id-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;"><span class="id-label" style="color: #64748b; font-weight: 600;">Academic Year</span><span class="id-value" id="idCardYear" style="color: #1e293b; font-weight: 700;">-</span></div>
+                    <div class="id-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;"><span class="id-label" style="color: #64748b; font-weight: 600;">Gender</span><span class="id-value" id="idCardGender" style="color: #1e293b; font-weight: 700;">-</span></div>
+                </div>
+                <div class="id-card-actions" style="display: flex; gap: 12px; margin-top: 24px; width: 100%;">
+                    <button class="id-btn id-btn-print" onclick="window.print()" style="flex: 1; padding: 14px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; background: #1e293b; color: white;">🖨️ Print ID Card</button>
+                </div>
+            </div>
+            <div class="id-card-footer" style="padding: 24px; background: #f8fafc; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9;">
+                <div id="idQRCode" class="qr-container" style="width: 80px; height: 80px;"></div>
+                <div class="status-badge" style="background: #ecfdf5; color: #059669; padding: 6px 14px; border-radius: 50px; font-size: 11px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+                    <span style="font-size: 14px;">✓</span> VERIFIED VOTER
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+    <!-- AI Summary Modal -->
+  <div id="aiSummaryModal" class="ai-summary-modal">
+    <div class="ai-modal-content">
+      <button onclick="closeAIModal()" style="position:absolute; top:20px; right:20px; border:none; background:none; font-size:24px; cursor:pointer;">&times;</button>
+      <div class="ai-badge">AI Analysis</div>
+      <h3 id="aiSumTitle" style="font-size: 20px; font-weight: 800; margin-bottom: 15px;"></h3>
+      <div id="aiSumContent" style="font-size: 14px; color: #475569; line-height: 1.6;"></div>
+    </div>
+  </div>
+  
+  <!-- PRN Update Modal (For Old Users) -->
+  <div class="ai-summary-modal" id="prnUpdateModal">
+    <div class="ai-modal-content">
+      <div class="ai-badge">Security Update</div>
+      <h3 style="font-size: 20px; font-weight: 800; margin-bottom: 10px;">Update Your PRN</h3>
+      <p style="font-size: 13px; color: #475569; margin-bottom: 20px;">
+        To ensure your voter record is up to date, please provide your Permanent Registration Number (PRN). 
+        You will only need to do this once.
+      </p>
+      <input type="text" id="newPrnInput" placeholder="Enter PRN (e.g. 123456789)" 
+             style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 20px; font-size: 16px; font-weight: 600;">
+      <div id="prnUpdateMsg" style="font-size: 12px; color: #ef4444; margin-bottom: 15px; min-height: 18px;"></div>
+      <button id="submitPrnBtn" class="action-btn" style="width: 100%; padding: 14px;">Update & Continue</button>
+    </div>
+  </div>
+
+
+
+  <script>
+    const originalFetch = window.fetch;
+    window.fetch = async function(...args) {
+      const response = await originalFetch(...args);
+      if (response.status === 401) {
+        localStorage.clear();
+        window.location.href = 'login';
+        return new Promise(() => {}); // Prevent further execution in the calling code
+      }
+      return response;
+    };
+
+
+    async function verifySession() {
+      try {
+        const res = await fetch('/api/auth/me', { credentials: 'include' });
+        if (!res.ok) {
+          localStorage.clear(); // Clear any residual local storage data
+          window.location.href = 'login';
+        }
+      } catch (err) { 
+        console.error("[VOTER DASHBOARD] Session verification error:", err);
+        localStorage.clear(); // Clear any residual local storage data
+        window.location.href = 'login';
+      }
+    }
+    verifySession();
+
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
+              }
+          }
+      }
+      return cookieValue;
+    }
+
+    // Set Date
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const dateEl = document.getElementById('currentDate');
+    if (dateEl) dateEl.innerText = new Date().toLocaleDateString('en-US', options);
+
+    function showSection(id, element) {
+      document.querySelectorAll('main > .section, main > .dashboard-grid').forEach(sec => sec.style.display = 'none');
+      document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+
+      const target = document.getElementById(id);
+      if (target) {
+        target.style.display = id === 'dashboard' ? 'grid' : 'block';
+        if (id === 'supportDesk') loadVoterComplaints();
+        if (id === 'voterIdSection') showVoterID();
+      } else if (id === 'dashboard') {
+        const grid = document.querySelector('.dashboard-grid');
+        if (grid) grid.style.display = 'grid';
+      }
+
+      if (element) element.classList.add('active');
+    }
+
+    async function loadDashboard() {
+      try {
+        const fetchOptions = { credentials: 'include' };
+        
+        const [profRes, candRes, electionsRes] = await Promise.all([
+          fetch('/api/auth/me', fetchOptions),
+          fetch('/api/candidates/me', fetchOptions),
+          fetch('/api/elections', fetchOptions),
+          loadVoterComplaints()
+        ]);
+
+        if (profRes.ok) {
+          const user = await profRes.json();
+          window.currentUser = user;
+
+          document.getElementById('voterName').innerText = (user.name || "Voter").split(' ')[0];
+          document.getElementById('avatarLetter').innerText = (user.name || "V")[0].toUpperCase();
+          document.getElementById('voterDept').innerText = `${user.department || 'N/A'} (${user.year || 'N/A'})`;
+          document.getElementById('voterRoll').innerText = user.rollNumber || 'N/A';
+          document.getElementById('voterForm').innerText = user.formNumber || 'FORM: PENDING';
+
+          const approverEl = document.getElementById('voterApprover');
+          if (approverEl) {
+              if (user.status === 'approved' && user.approvedBy) approverEl.innerText = `Approved by: ${user.approvedBy.name}`;
+              else if (user.status === 'rejected' && user.rejectedBy) approverEl.innerText = `Rejected by: ${user.rejectedBy.name}`;
+              else if (user.status === 'verified' && user.verifiedBy) approverEl.innerText = `Verified by: ${user.verifiedBy.name}`;
+              else approverEl.innerText = '';
+          }
+
+          checkAppealEligibility(user);
+          fillProfileForm(user);
+          
+          // Class list loading should be here
+          await loadClasses();
+        }
+
+        if (candRes.ok) {
+          const myApp = await candRes.json();
+          if (myApp) {
+            const formCont = document.getElementById('appFormContainer');
+            const appliedCont = document.getElementById('alreadyApplied');
+            if (formCont) formCont.style.display = 'none';
+            if (appliedCont) appliedCont.style.display = 'block';
+
+            const statusBadge = document.getElementById('appStatus');
+            const candFormNum = document.getElementById('candFormNum');
+            const appHeader = document.getElementById('appHeader');
+            const appDetail = document.getElementById('appDetail');
+
+            if (candFormNum) candFormNum.innerText = myApp.formNumber || '';
+
+            if (myApp.status === 'rejected') {
+              if (statusBadge) {
+                statusBadge.innerText = "Application Rejected";
+                statusBadge.className = "badge badge-rejected";
+                statusBadge.style.backgroundColor = "#ef4444";
+                statusBadge.style.color = "white";
+              }
+              if (appHeader) appHeader.innerText = "Application Rejected";
+              const formInfo = myApp.formNumber ? `<p style="font-size: 11px; color: #94a3b8; margin-bottom: 10px;">Form #${myApp.formNumber}</p>` : '';
+              if (appDetail) appDetail.innerHTML = `${formInfo}<span style="color: #ef4444; font-weight: 700;">Reason:</span> ${myApp.rejectionReason || 'Requirements not met'}. <br><br> <button class="action-btn resubmit-cand-btn" style="padding: 5px 15px; font-size: 11px;">Fix & Resubmit</button>`;
+            } else if (statusBadge) {
+              statusBadge.innerText = myApp.isApproved ? "Approved Candidate" : "Pending Review";
+              statusBadge.className = `badge badge-${myApp.isApproved ? 'voted' : 'pending'}`;
+              if (appHeader) appHeader.innerText = myApp.isApproved ? "Application Approved" : "Application Under Review";
+              if (appDetail) appDetail.innerHTML = myApp.isApproved ? 
+                `Congratulations! You are an officially approved candidate for <strong>${myApp.position}</strong>.` : 
+                `Your candidacy application (<strong>${myApp.formNumber}</strong>) is currently being processed by the Election Committee.`;
+            }
+          }
+        }
+
+        if (electionsRes.ok) {
+          const elections = await electionsRes.json();
+          const activeElection = elections.find(e => e.status === 'active');
+          if (activeElection) {
+            const heroH2 = document.querySelector('.hero-section h2');
+            if (heroH2) heroH2.innerText = activeElection.name;
+          }
+        }
+
+        // Fetch Approved Candidates for Grid
+        try {
+          const appCandRes = await fetch('/api/candidates/approved', { credentials: 'include' });
+          if (appCandRes.ok) {
+            const candidates = await appCandRes.json();
+            const list = document.getElementById('candidateList');
+            if (list && window.currentUser) {
+              list.innerHTML = '';
+              const classCandidates = candidates.filter(c =>
+                ['CR', 'LR'].includes(c.position.toUpperCase()) &&
+                c.department === window.currentUser.department &&
+                c.year === window.currentUser.year
+              );
+              const globalCandidates = candidates.filter(c => ['GS', 'DGS'].includes(c.position.toUpperCase()));
+              if (classCandidates.length === 0 && globalCandidates.length === 0) {
+                list.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">No candidates approved for your category yet.</p>`;
+              } else {
+                [...classCandidates, ...globalCandidates].forEach(c => {
+                  const div = document.createElement('div');
+                  div.className = 'candidate-card';
+                  div.innerHTML = `
+                                <div class="candidate-img-wrapper">
+                                    <img src="${c.photo || 'https://via.placeholder.com/150'}" alt="${c.name}">
+                                </div>
+                                <div class="candidate-name">${c.name}</div>
+                                <div class="candidate-role" style="color: ${['GS', 'DGS'].includes(c.position.toUpperCase()) ? '#a855f7' : 'var(--primary)'};">
+                                  ${c.position} ${['GS', 'DGS'].includes(c.position.toUpperCase()) ? '(Council)' : `(${c.department})`}
+                                </div>
+                                <p style="font-size: 10px; color: #64748b; margin-top: 8px;">${c.party || 'Independent'}</p>
+                                <button class="generate-ai-btn" data-manifesto="${btoa(c.manifesto || '')}" data-name="${c.name}"
+                                        style="margin-top: 15px; background: #eff6ff; color: var(--primary); border: none; padding: 8px 12px; border-radius: 10px; font-size: 11px; font-weight: 700; cursor: pointer; width: 100%;">
+                                    ✨ AI Summary
+                                </button>
+                            `;
+                  list.appendChild(div);
+                });
+              }
+            }
+          }
+        } catch (err) { console.error("Candidate Grid Error:", err); }
+
+      } catch (err) { console.error("Dashboard Load Error:", err); }
+    }
+
+
+    // AI Enhancements
+    function closeAIModal() {
+        const modal = document.getElementById('aiSummaryModal');
+        if (modal) modal.style.display = 'none';
+    }
+
+    async function generateAISummary(encodedManifesto, name) {
+        const manifesto = atob(encodedManifesto);
+        const modal = document.getElementById('aiSummaryModal');
+        const title = document.getElementById('aiSumTitle');
+        const content = document.getElementById('aiSumContent');
+
+        if (!modal || !title || !content) return;
+
+        title.innerText = `${name}'s Vision Summary`;
+        content.innerHTML = `
+            <div class="thinking-dots" style="display: flex; gap: 5px; margin: 20px 0;">
+                <div style="width: 8px; height: 8px; background: #6366f1; border-radius: 50%; animation: pulse 1s infinite 0s;"></div>
+                <div style="width: 8px; height: 8px; background: #6366f1; border-radius: 50%; animation: pulse 1s infinite 0.2s;"></div>
+                <div style="width: 8px; height: 8px; background: #6366f1; border-radius: 50%; animation: pulse 1s infinite 0.4s;"></div>
+            </div>
+            AI is analyzing the manifesto...
+        `;
+        modal.style.display = 'flex';
+
+        setTimeout(() => {
+            if (!manifesto || manifesto.length < 20) {
+                content.innerHTML = "This candidate hasn't provided a detailed manifesto for AI analysis yet.";
+                return;
+            }
+            const points = manifesto.split(/[.!?]/).filter(s => s.trim().length > 10);
+            const summaryPoints = points.slice(0, 3).map(p => `<li>${p.trim()}.</li>`).join('');
+            content.innerHTML = `
+                <p style="margin-bottom: 15px;">Based on the manifesto, here are the key priorities:</p>
+                <ul style="padding-left: 20px; text-align: left;">
+                    ${summaryPoints}
+                    ${points.length > 3 ? `<li>Focus on ${points[points.length-1].trim()}.</li>` : ''}
+                </ul>
+                <div style="margin-top: 20px; padding: 10px; background: #f0f9ff; border-radius: 12px; font-size: 13px; color: var(--primary);">
+                    <strong>AI Sentiment:</strong> High potential for community impact.
+                </div>
+            `;
+        }, 1500);
+    }
+
+    function fillProfileForm(user) {
+      if (document.getElementById('profName')) document.getElementById('profName').value = user.name;
+      if (document.getElementById('profEmail')) document.getElementById('profEmail').value = user.email;
+      if (document.getElementById('profGender')) document.getElementById('profGender').value = user.gender || 'male';
+      if (document.getElementById('profAddress')) document.getElementById('profAddress').value = user.address || '';
+    }
+
+    async function updateProfile(e) {
+      e.preventDefault();
+      const name = document.getElementById('profName').value;
+      const email = document.getElementById('profEmail').value;
+      const gender = document.getElementById('profGender').value;
+      const address = document.getElementById('profAddress').value;
+      const body = { name, email, gender, address };
+      try {
+        const res = await fetch('/api/auth/profile', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': getCookie('XSRF-TOKEN')
+          },
+          credentials: 'include',
+          body: JSON.stringify(body)
+        });
+        if (res.ok) {
+          alert("Profile updated successfully!");
+          location.reload();
+        } else {
+          const data = await res.json();
+          alert(data.msg);
+        }
+      } catch (err) { alert("Update failed"); }
+    }
+
+    async function logoutUser(e) {
+      if (e) e.preventDefault();
+      try {
+        await fetch('/api/auth/logout', { 
+            method: 'POST', 
+            headers: { 'x-auth-token': token, 'X-CSRF-Token': getCookie('XSRF-TOKEN') },
+            credentials: 'include' 
+        });
+      } catch (e) { console.error("Logout error:", e); }
+      localStorage.clear();
+      window.location.href = 'login';
+    }
+
+    async function applyCandidate(e) {
+      e.preventDefault();
+      const position = document.getElementById('candPosition').value;
+      const party = document.getElementById('candParty').value;
+      const manifesto = document.getElementById('candManifesto').value;
+      const photoFile = document.getElementById('candPhoto').files[0];
+      const proofFile = document.getElementById('candAddressProof').files[0];
+      if (!photoFile) return alert("Please upload a campaign photo.");
+
+      const toBase64 = file => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+      });
+
+      try {
+        const photoBase64 = await toBase64(photoFile);
+        let addressProof = null;
+        if (proofFile) addressProof = await toBase64(proofFile);
+
+        const res = await fetch('/api/candidates/apply', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': getCookie('XSRF-TOKEN')
+          },
+          credentials: 'include',
+          body: JSON.stringify({ position, party, manifesto, photo: photoBase64, addressProof })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert("Application submitted!");
+          location.reload();
+        } else alert(data.msg);
+      } catch (err) { alert("Submission failed"); }
+    }
+
+    async function updateCountdown() {
+      try {
+        const res = await fetch('/api/elections', { credentials: 'include' });
+        const elections = await res.json();
+        let relevantElection = elections.find(e => e.status === 'active') || elections.find(e => e.status === 'scheduled');
+        if (!relevantElection) {
+          document.getElementById('countdown').innerText = "No Polls Soon";
+          return;
+        }
+        const target = relevantElection.status === 'active' ? new Date(relevantElection.endTime).getTime() : new Date(relevantElection.startTime).getTime();
+        const label = relevantElection.status === 'active' ? 'Polls Closing Soon' : 'Polls Opening Soon';
+        const labelEl = document.querySelector('#countdown').parentElement.querySelector('span[style*="background: #fff7ed"]');
+        if (labelEl) labelEl.innerText = label;
+        const now = new Date().getTime();
+        const diff = target - now;
+        if (diff <= 0) {
+          document.getElementById('countdown').innerText = "00:00:00:00";
+          return;
+        }
+        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const s = Math.floor((diff % (1000 * 60)) / 1000);
+        document.getElementById('countdown').innerText = `${d.toString().padStart(2, '0')}:${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+      } catch (err) { console.error("Countdown Error:", err); }
+    }
+
+
+    function checkAppealEligibility(user) {
+        const appealBox = document.getElementById('appealBox');
+        if (appealBox && (user.status === 'rejected' || (!user.isApproved && user.rejectedBy))) {
+            appealBox.style.display = 'block';
+        }
+    }
+
+    async function loadVoterComplaints() {
+        try {
+            const res = await fetch('/api/helpdesk/my', { credentials: 'include' });
+            const complaints = await res.json();
+            const list = document.getElementById('voterTicketList');
+            if (!list) return;
+            if (!Array.isArray(complaints)) {
+                list.innerHTML = `<p style="text-align:center; color: #ef4444; padding:20px;">Failed to load sync history.</p>`;
+                return;
+            }
+            if (complaints.length === 0) {
+                list.innerHTML = `<div style="text-align:center; padding: 40px; color: var(--text-muted);"><div style="font-size: 32px; margin-bottom: 10px;">📋</div><p>No support tickets found.</p></div>`;
+                return;
+            }
+            list.innerHTML = complaints.map(c => {
+                let repliesHtml = '';
+                if (c.replies && c.replies.length > 0) {
+                    repliesHtml = c.replies.map(r => `
+                        <div style="margin-top: 15px; padding: 12px; border-radius: 8px; ${r.sender === 'voter' ? 'background: #f1f5f9; margin-left:20px; border-left:4px solid #94a3b8;' : 'background: #ecffff; margin-right:20px; border-left:4px solid #06b6d4;'}">
+                            <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:5px; color:#64748b;">
+                                <strong>${r.senderName || r.sender.toUpperCase()}</strong>
+                                <span>${new Date(r.timestamp).toLocaleString()}</span>
+                            </div>
+                            <div style="font-size: 13px; color:#334155;">${r.message}</div>
+                            ${r.attachmentUrl ? `<div style="margin-top:8px;"><a href="${r.attachmentUrl}" target="_blank" style="font-size:11px; color:#2563eb; text-decoration:underline;">📎 View Attachment</a></div>` : ''}
+                        </div>
+                    `).join('');
+                }
+
+                const lastReply = c.replies && c.replies.length > 0 ? c.replies[c.replies.length - 1] : null;
+                const isClosed = (c.status === 'resolved' || c.status === 'dismissed');
+                const canReply = !isClosed && (!lastReply || lastReply.sender !== 'voter');
+
+                let replyFormHtml = '';
+                if (!isClosed) {
+                    if (canReply) {
+                        replyFormHtml = `
+                            <div style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed #cbd5e1;">
+                                <form class="voter-reply-form" data-id="${c._id}">
+                                    <textarea required placeholder="Write a reply..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 10px; min-height: 60px; font-size:13px;"></textarea>
+                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                        <input type="file" accept="image/*,.pdf,.doc,.docx" style="font-size:11px; color:#64748b;">
+                                        <button type="submit" class="action-btn" style="padding: 8px 16px; background: #2563eb; font-size:12px;">Send Reply</button>
+                                        <button type="button" class="action-btn close-btn" data-id="${c._id}" style="padding: 8px 16px; background: #ef4444; font-size:12px; margin-left:auto;">Close Ticket</button>
+                                    </div>
+                                </form>
+                            </div>`;
+                    } else {
+                        replyFormHtml = `
+                            <div style="margin-top: 20px; padding: 15px; border-radius: 8px; background: #fef3c7; border: 1px solid #fde68a; font-size: 12px; color: #b45309; text-align: center;">
+                                <em>Waiting for administration to reply before you can send another message.</em>
+                                <br><br>
+                                <button type="button" class="action-btn close-btn" data-id="${c._id}" style="padding: 6px 12px; background: #ef4444; font-size:11px;">Close Ticket</button>
+                            </div>`;
+                    }
+                }
+
+                let ratingHtml = '';
+                if (isClosed) {
+                    if (c.rating) {
+                        ratingHtml = `
+                            <div style="margin-top: 15px; padding: 10px; background: #fffbeb; border-radius: 8px; border: 1px solid #fde68a;">
+                                <div style="font-size: 12px; font-weight: 700; color: #b45309; margin-bottom: 5px;">Your Rating: ${'⭐'.repeat(c.rating)}</div>
+                                ${c.voterFeedback ? `<div style="font-size: 11px; color: #78350f; font-style: italic;">"${c.voterFeedback}"</div>` : ''}
+                            </div>`;
+                    } else {
+                        ratingHtml = `
+                            <div class="rating-box" id="rating-box-${c._id}" style="margin-top: 15px; padding: 15px; background: #f8fafc; border-radius: 10px; border: 1px dashed #cbd5e1;">
+                                <p style="font-size: 12px; font-weight: 700; margin-bottom: 10px;">Rate the resolution of this ticket:</p>
+                                <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+                                    ${[1,2,3,4,5].map(num => `<button type="button" class="rate-star-btn" data-id="${c._id}" data-rating="${num}" style="background:none; border:none; font-size:20px; cursor:pointer; filter: grayscale(100%);">⭐</button>`).join('')}
+                                </div>
+                                <input type="text" id="feedback-${c._id}" placeholder="Optional feedback..." style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 11px; margin-bottom: 10px;">
+                                <button class="action-btn submit-rating-btn" data-id="${c._id}" style="padding: 6px 12px; font-size: 10px; opacity: 0.5; pointer-events: none;">Submit Rating</button>
+                            </div>`;
+                    }
+                }
+
+                return `
+                    <div class="ticket-item" style="${c.isEscalated ? 'border-left: 4px solid var(--accent);' : c.status === 'under_review' ? 'border-left: 4px solid #3b82f6;' : ''}">
+                        <div class="ticket-header">
+                            <div>
+                                <span class="ticket-id">${c.trackingId || 'TKT-OLD'}</span>
+                                <small style="color:var(--text-muted); margin-left:10px; font-size:10px;">To: ${c.target ? c.target.toUpperCase() : 'COMMITTEE'} | ${c.category.toUpperCase()}</small>
+                            </div>
+                            <span class="ticket-status status-${c.status === 'resolved' ? 'resolved' : c.status === 'pending' ? 'pending' : 'review'}">
+                                ${c.status.replace('_', ' ')}
+                            </span>
+                        </div>
+                        
+                        <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 10px;">${new Date(c.timestamp).toLocaleString()}</div>
+                        <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
+                            <div style="font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 5px;">INITIAL ISSUE</div>
+                            <p style="font-size: 14px; color: var(--text-main); margin:0;">${c.message}</p>
+                            ${c.attachmentUrl ? `<div style="margin-top:10px;"><a href="${c.attachmentUrl}" target="_blank" style="font-size:12px; color:#2563eb; text-decoration:underline;">📎 View Attachment</a></div>` : ''}
+                        </div>
+                        
+                        ${c.adminReply ? `
+                            <div class="ticket-reply" style="margin-bottom: 15px;">
+                                <strong style="color: #0f172a; font-size:11px;">LEGACY RESOLUTION:</strong><br>
+                                <span style="font-size:13px;">${c.adminReply}</span>
+                            </div>` : ''}
+
+                        <div class="chat-thread">
+                            ${repliesHtml}
+                        </div>
+                        
+                        ${replyFormHtml}
+                        ${ratingHtml}
+                    </div>
+                `;
+            }).join('');
+            
+            // Attach Star Hover/Click Logic
+            document.querySelectorAll('.rate-star-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.dataset.id;
+                    const rating = parseInt(this.dataset.rating);
+                    const container = document.getElementById(`rating-box-${id}`);
+                    
+                    // Highlight stars
+                    container.querySelectorAll('.rate-star-btn').forEach(star => {
+                        if (parseInt(star.dataset.rating) <= rating) {
+                            star.style.filter = 'grayscale(0%)';
+                        } else {
+                            star.style.filter = 'grayscale(100%)';
+                        }
+                    });
+                    
+                    // Enable submit
+                    const submitBtn = container.querySelector('.submit-rating-btn');
+                    submitBtn.style.opacity = '1';
+                    submitBtn.style.pointerEvents = 'auto';
+                    submitBtn.dataset.selectedRating = rating;
+                });
+            });
+
+            // Global delegation for dynamic ticket buttons
+            document.getElementById('voterTicketList').addEventListener('submit', async (e) => {
+                if (e.target.classList.contains('voter-reply-form')) {
+                    e.preventDefault();
+                    const form = e.target;
+                    const id = form.dataset.id;
+                    const message = form.querySelector('textarea').value;
+                    const fileInput = form.querySelector('input[type="file"]');
+                    const btn = form.querySelector('button[type="submit"]');
+                    
+                    btn.innerText = 'Sending...'; btn.disabled = true;
+                    
+                    const formData = new FormData();
+                    formData.append('message', message);
+                    if (fileInput && fileInput.files[0]) {
+                        formData.append('attachment', fileInput.files[0]);
+                    }
+                    
+                    try {
+                        const res = await fetch(`/api/helpdesk/reply/${id}`, {
+                            method: 'POST',
+                            headers: { 'X-CSRF-Token': getCookie('XSRF-TOKEN') },
+                            credentials: 'include',
+                            body: formData
+                        });
+                        const data = await res.json();
+                        if (res.ok) {
+                            loadVoterComplaints();
+                        } else {
+                            alert(data.msg);
+                            btn.innerText = 'Send Reply'; btn.disabled = false;
+                        }
+                    } catch (err) {
+                        alert('Reply failed');
+                        btn.innerText = 'Send Reply'; btn.disabled = false;
+                    }
+                }
+            });
+
+            document.getElementById('voterTicketList').addEventListener('click', async (e) => {
+                if (e.target.classList.contains('close-btn')) {
+                    const id = e.target.dataset.id;
+                    if (!confirm("Are you sure you want to close this ticket permanently?")) return;
+                    try {
+                        const res = await fetch(`/api/helpdesk/close/${id}`, {
+                            method: 'POST',
+                            headers: { 'X-CSRF-Token': getCookie('XSRF-TOKEN') },
+                            credentials: 'include'
+                        });
+                        if (res.ok) {
+                            loadVoterComplaints();
+                        } else {
+                            alert('Failed to close ticket');
+                        }
+                    } catch (err) {
+                        alert('Network error');
+                    }
+                }
+            });
+
+        } catch (err) { console.error("Complaints Load Error:", err); }
+    }
+
+
+
+    async function rateTicket(id, rating, feedback) {
+        try {
+            const res = await fetch(`/api/helpdesk/rate/${id}`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'X-CSRF-Token': getCookie('XSRF-TOKEN') 
+                },
+                credentials: 'include',
+                body: JSON.stringify({ rating, feedback })
+            });
+            if (res.ok) {
+                alert("Thank you for your feedback!");
+                loadVoterComplaints();
+            } else {
+                const data = await res.json();
+                alert(data.msg);
+            }
+        } catch (err) { alert("Failed to submit rating"); }
+    }
+
+    async function appealTicket(id) {
+        const msg = prompt("Please provide a reason for the appeal:");
+        if (msg === null) return;
+        try {
+            const res = await fetch(`/api/helpdesk/appeal/${id}`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'X-CSRF-Token': getCookie('XSRF-TOKEN') 
+                },
+                credentials: 'include',
+                body: JSON.stringify({ appealMessage: msg })
+            });
+            if (res.ok) { alert("Escalated to System Admin."); loadVoterComplaints(); }
+        } catch (err) { alert("Escalation failed"); }
+    }
+
+    function autoAppeal() {
+        const msg = `APPEAL: My application was rejected/removed. I request a re-verification.`;
+        document.getElementById('voterCompCategory').value = 'voter';
+        document.getElementById('voterCompMessage').value = msg;
+        document.getElementById('navSupport').click();
+    }
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById('dashboardSidebar');
+      if (sidebar) sidebar.classList.toggle('active');
+    }
+
+    function resubmitCandidate() {
+      showSection('candidatePortal', document.getElementById('navCandidate'));
+      const formCont = document.getElementById('appFormContainer');
+      const appliedCont = document.getElementById('alreadyApplied');
+      if (formCont) formCont.style.display = 'block';
+      if (appliedCont) appliedCont.style.display = 'none';
+    }
+
+    setInterval(updateCountdown, 5000);
+    updateCountdown();
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Grievance Form Handler
+      const grievanceForm = document.getElementById('voterGrievanceForm');
+      if (grievanceForm) {
+        grievanceForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const btn = e.target.querySelector('button[type="submit"]');
+          btn.innerText = 'Submitting...'; btn.disabled = true;
+          
+          try {
+            const formData = new FormData();
+            formData.append('category', document.getElementById('grievanceCategory').value);
+            formData.append('target', document.getElementById('grievanceTarget').value);
+            formData.append('message', document.getElementById('grievanceMessage').value);
+            
+            const fileInput = document.getElementById('grievanceAttachment');
+            if (fileInput && fileInput.files[0]) {
+              formData.append('attachment', fileInput.files[0]);
+            }
+            
+            const res = await fetch('/api/helpdesk/submit', {
+              method: 'POST',
+              headers: { 'X-CSRF-Token': getCookie('XSRF-TOKEN') },
+              credentials: 'include',
+              body: formData
+            });
+            const data = await res.json();
+            
+            if (res.ok) {
+              alert(`Grievance Logged Successfully!\nTracking ID: ${data.trackingId}`);
+              e.target.reset();
+              loadVoterComplaints();
+            } else {
+              alert('Error: ' + data.msg);
+            }
+          } catch (err) {
+            alert('Failed to submit grievance. Connect to network.');
+          } finally {
+            btn.innerText = 'Submit Ticket'; btn.disabled = false;
+          }
+        });
+      }
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                if (link.dataset.section) {
+                    e.preventDefault();
+                    showSection(link.dataset.section, link);
+                }
+            });
+        });
+        const mobileToggle = document.getElementById('mobileNavToggle');
+        if (mobileToggle) mobileToggle.addEventListener('click', toggleSidebar);
+        const startSyncBtn = document.getElementById('startSyncBtn');
+        if (startSyncBtn) startSyncBtn.addEventListener('click', startSync);
+        const captureSyncBtn = document.getElementById('captureSyncBtn');
+        if (captureSyncBtn) captureSyncBtn.addEventListener('click', captureSync);
+
+        const profileForm = document.getElementById('profileForm');
+        if (profileForm) profileForm.addEventListener('submit', updateProfile);
+        const candidateApplyForm = document.getElementById('candidateApplyForm');
+        if (candidateApplyForm) candidateApplyForm.addEventListener('submit', applyCandidate);
+
+
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) logoutBtn.addEventListener('click', logoutUser);
+
+        const autoAppealBtn = document.getElementById('autoAppealBtn');
+        if (autoAppealBtn) autoAppealBtn.addEventListener('click', autoAppeal);
+
+        document.body.addEventListener('click', (e) => {
+            if (e.target.closest('.appeal-ticket-btn')) {
+                appealTicket(e.target.closest('.appeal-ticket-btn').dataset.id);
+            }
+            if (e.target.closest('.resubmit-cand-btn')) resubmitCandidate();
+            if (e.target.closest('.generate-ai-btn')) {
+                const btn = e.target.closest('.generate-ai-btn');
+                generateAISummary(btn.dataset.manifesto, btn.dataset.name);
+            }
+            if (e.target.closest('#viewIDCardBtn')) {
+                e.preventDefault();
+                showSection('voterIdSection', e.target.closest('#viewIDCardBtn'));
+            }
+            if (e.target.closest('.id-btn-print')) {
+                window.print();
+            }
+            if (e.target.closest('.submit-rating-btn')) {
+                const btn = e.target.closest('.submit-rating-btn');
+                const id = btn.dataset.id;
+                const rating = parseInt(btn.dataset.selectedRating);
+                const feedback = document.getElementById(`feedback-${id}`).value;
+                if (rating) rateTicket(id, rating, feedback);
+            }
+        });
+
+        loadDashboard();
+    });
+
+    function showVoterID() {
+        try {
+            const errorView = document.getElementById('idCardErrorView');
+            const successView = document.getElementById('idCardSuccessView');
+            if (!errorView || !successView) return;
+            
+            const u = window.currentUser;
+            if (!u) {
+                errorView.style.display = 'block';
+                successView.style.display = 'none';
+                document.getElementById('idCardErrorText').innerText = "Profile data is still loading... Please wait.";
+                return;
+            }
+            
+            if (u.status !== 'approved' && u.status !== 'verified' && !u.isApproved) {
+                errorView.style.display = 'block';
+                successView.style.display = 'none';
+                document.getElementById('idCardErrorText').innerText = "Voter ID is only available for fully verified accounts (Current: " + u.status + ").";
+                return;
+            }
+
+            errorView.style.display = 'none';
+            successView.style.display = 'flex';
+
+            document.getElementById('idCardName').innerText = u.name || 'Student';
+            document.getElementById('idCardRoll').innerText = u.rollNumber || 'N/A';
+            document.getElementById('idCardPRN').innerText = u.prn || 'N/A';
+            document.getElementById('idCardDept').innerText = u.department || 'N/A';
+            document.getElementById('idCardYear').innerText = u.year || 'N/A';
+            document.getElementById('idCardGender').innerText = (u.gender ? u.gender.toUpperCase() : 'N/A');
+            
+            if (u.profilePhoto || u.faceData) {
+                const img = document.getElementById('idCardPhoto');
+                if (img) img.src = u.profilePhoto || u.faceData;
+            }
+
+            // QR Generation with slight delay to ensure div is visible & styled
+            setTimeout(() => {
+                const qrEl = document.getElementById('idQRCode');
+                if (qrEl) {
+                    qrEl.innerHTML = '<p style="font-size:9px; color:#94a3b8; text-align:center; margin-top:20px;">Generating...</p>';
+                    const voterId = u._id || u.id || u.rollNumber || 'anonymous';
+                    if (typeof QRCode !== 'undefined') {
+                        qrEl.innerHTML = '';
+                        new QRCode(qrEl, {
+                            text: `${window.location.origin}/verify.html?id=${voterId}`,
+                            width: 80,
+                            height: 80,
+                            colorDark : "#000000",
+                            colorLight : "#ffffff",
+                            correctLevel : QRCode.CorrectLevel.H
+                        });
+                    } else {
+                        qrEl.innerHTML = '<p style="color:red; font-size:8px;">Lib Error</p>';
+                    }
+                }
+            }, 100);
+        } catch(err) {
+            console.error("ID View Logic Error:", err);
+        }
+    }
+
+    // PRN Update Logic
+    async function checkPrnStatus() {
+        if (localStorage.getItem('needsPrnUpdate') === 'true') {
+            document.getElementById('prnUpdateModal').style.display = 'flex';
+        }
+    }
+
+
+    async function updatePrn() {
+        const prn = document.getElementById('newPrnInput').value;
+        const msg = document.getElementById('prnUpdateMsg');
+        const btn = document.getElementById('submitPrnBtn');
+
+        if (!prn || prn.length < 5) {
+            msg.innerText = 'Invalid PRN format.';
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = 'Updating...';
+        msg.innerText = '';
+        msg.style.color = '#475569';
+
+        try {
+            const res = await fetch('/api/auth/update-prn', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': getCookie('XSRF-TOKEN')
+                },
+                credentials: 'include',
+                body: JSON.stringify({ prn })
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                localStorage.removeItem('needsPrnUpdate');
+                msg.style.color = '#10b981';
+                msg.innerText = '✅ PRN updated! Refreshing...';
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                msg.style.color = '#ef4444';
+                msg.innerText = data.msg || 'Update failed.';
+                btn.disabled = false;
+                btn.innerText = 'Update & Continue';
+            }
+        } catch (err) {
+            msg.style.color = '#ef4444';
+            msg.innerText = 'Connection error.';
+            btn.disabled = false;
+            btn.innerText = 'Update & Continue';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const submitBtn = document.getElementById('submitPrnBtn');
+        if (submitBtn) submitBtn.addEventListener('click', updatePrn);
+        checkPrnStatus();
+    });
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="chatbot.js"></script>
+  <script src="js/location-check.js"></script>
+</body>
+
+
+</html>
