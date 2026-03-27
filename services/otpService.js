@@ -58,8 +58,8 @@ const dns = require('node:dns');
 
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // Use STARTTLS (port 587)
+    port: 465,
+    secure: true, // Use SMTPS (port 465)
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
@@ -72,9 +72,9 @@ const transporter = nodemailer.createTransport({
         dns.lookup(hostname, { family: 4 }, callback);
     },
     family: 4, // Explicitly force IPv4
-    connectionTimeout: 15000, // 15 seconds
-    greetingTimeout: 15000,
-    socketTimeout: 30000,
+    connectionTimeout: 30000, // 30 seconds
+    greetingTimeout: 30000,
+    socketTimeout: 60000,
     debug: true, // Enable debug logging
     logger: true // Use built-in logger to stdout
 });
