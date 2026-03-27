@@ -7,7 +7,7 @@ const User = require('../models/User');
 const Election = require('../models/Election');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
-const { sendEmail } = require('../services/otpService');
+const { sendWhatsAppMessage } = require('../services/otpService');
 
 // Cast Vote
 router.post('/cast', auth, async (req, res) => {
@@ -91,10 +91,10 @@ router.post('/cast', auth, async (req, res) => {
         const logAudit = require('../middleware/auditLog');
         await logAudit(req, 'VOTE_CAST', 'VOTER', `Voted for candidate ${candidateId} in election ${electionId} (Type: ${type})`);
 
-        // Send Confirmation Email (Async)
-        const greeting = `Hello ${user.name},\n\nYour vote has been securely recorded on our blockchain-backed ledger for the election: ${election.name}.\n\nThank you for participating in the democratic process!\n\nBest Regards,\neVoter Team`;
+        // Send Confirmation via WhatsApp (Async)
+        const greeting = `Hello ${user.name},\n\nYour vote has been securely recorded for the election: ${election.name}.\n\nThank you for participating!`;
         
-        sendEmail(user.email, 'Vote Cast Successfully | eVoter', greeting).catch(e => console.error("Vote Email Failed:", e));
+        sendWhatsAppMessage(user.phone, greeting).catch(e => console.error("Vote WhatsApp Failed:", e));
 
         res.json({ msg: 'Your vote has been recorded securely' });
 

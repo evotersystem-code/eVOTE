@@ -1,7 +1,6 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcodeTerminal = require('qrcode-terminal');
 const qrcodeImage = require('qrcode');
-const nodemailer = require('nodemailer');
 const OTP = require('../models/OTP');
 const fs = require('fs');
 const path = require('path');
@@ -51,33 +50,12 @@ try {
     console.error("WhatsApp Initialization Failed (Sync):", err.message);
 }
 
-// Nodemailer setup
-console.log("Initializing Nodemailer with user:", process.env.EMAIL_USER ? process.env.EMAIL_USER : "NOT FOUND");
-
-const dns = require('node:dns');
-
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // Use SMTPS (port 465)
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    },
-    tls: {
-        rejectUnauthorized: false
-    },
-    lookup: (hostname, options, callback) => {
-        // Force DNS resolution to IPv4
-        dns.lookup(hostname, { family: 4 }, callback);
-    },
-    family: 4, // Explicitly force IPv4
-    connectionTimeout: 30000, // 30 seconds
-    greetingTimeout: 30000,
-    socketTimeout: 60000,
-    debug: true, // Enable debug logging
-    logger: true // Use built-in logger to stdout
-});
+// --- Email Service Deprecated (Shifted to WhatsApp) ---
+async function sendEmail(to, subject, text) {
+    console.warn(`[DEPRECATED] sendEmail called for ${to}. Redirecting to logs only.`);
+    console.log(`[DEPRECATED EMAIL] Subject: ${subject}\nText: ${text}`);
+    return true; 
+}
 
 function generateOTP() {
     return Math.floor(100000 + Math.random() * 900000).toString();
@@ -131,27 +109,8 @@ async function sendWhatsAppOTP(identifier, phone) {
 }
 
 async function sendEmailOTP(email) {
-    try {
-        const code = generateOTP();
-
-        // Save to DB
-        await OTP.create({ identifier: email, code });
-
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: 'eVoter Verification Code',
-            text: `Your verification code is: ${code}. Valid for 10 minutes.`
-        };
-
-        console.log(`[SMTP] Attempting to send OTP email to: ${email}...`);
-        const info = await transporter.sendMail(mailOptions);
-        console.log(`[SMTP] SUCCESS: Email OTP sent to ${email}: ${info.response}`);
-        return code;
-    } catch (err) {
-        console.error("Email Send Error:", err.message);
-        throw err;
-    }
+    console.error(`[DEPRECATED] sendEmailOTP called for ${email}. Email OTP is removed.`);
+    throw new Error("Email OTP is no longer supported. Please use WhatsApp.");
 }
 
 async function verifyOTP(identifier, code) {
@@ -168,28 +127,13 @@ async function verifyOTP(identifier, code) {
     return true;
 }
 
-async function sendEmail(to, subject, text) {
-    try {
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to,
-            subject,
-            text
-        };
-        console.log(`[SMTP] Attempting to send general email to: ${to}...`);
-        const info = await transporter.sendMail(mailOptions);
-        console.log(`[SMTP] SUCCESS: General email sent to ${to}: ${info.response}`);
-        return info;
-    } catch (err) {
-        console.error("Email Send Error:", err.message);
-        throw err;
-    }
-}
+// Export is already handled below
 
 module.exports = {
     sendWhatsAppOTP,
     sendEmailOTP,
     verifyOTP,
     sendEmail,
+    sendWhatsAppMessage,
     client
 };

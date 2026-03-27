@@ -6,7 +6,7 @@ const User = require('../models/User');
 const auth = require('../middleware/auth');
 const BiometricRecord = require('../models/BiometricRecord');
 const crypto = require('crypto');
-const { sendWhatsAppOTP, sendEmailOTP, verifyOTP, client } = require('../services/otpService');
+const { sendWhatsAppOTP, sendEmailOTP, verifyOTP, sendWhatsAppMessage, client } = require('../services/otpService');
 const AuditLog = require('../models/AuditLog');
 console.log("[DEBUG] authRoutes.js loading...");
 const logAudit = require('../middleware/auditLog');
@@ -40,32 +40,28 @@ router.post('/test-whatsapp-send', async (req, res) => {
 router.post('/send-otp', async (req, res) => {
     console.log(`[OTP] Request: /send-otp, Body:`, req.body);
     try {
-        const { identifier, type } = req.body; // type: 'email' or 'whatsapp'
-        if (!identifier || !type) return res.status(400).json({ msg: 'Identifier and type required' });
+        const { identifier } = req.body;
+        if (!identifier) return res.status(400).json({ msg: 'Identifier required' });
 
-        if (type === 'email') {
-            await sendEmailOTP(identifier);
-        } else if (type === 'whatsapp') {
-            // Check if identifier is an email (lookup user) or a phone number (direct send)
-            const isEmail = identifier.includes('@');
-            
-            if (isEmail) {
-                const user = await User.findOne({ email: identifier });
-                if (!user) return res.status(404).json({ msg: 'User not found' });
-                if (!user.phone) return res.status(400).json({ msg: 'No WhatsApp number registered for this user' });
-                await sendWhatsAppOTP(identifier, user.phone);
-            } else {
-                // Assume identifier is the phone number itself (used in registration)
-                await sendWhatsAppOTP(identifier, identifier);
-            }
+        let targetPhone = null;
+        const isEmail = identifier.includes('@');
+        
+        if (isEmail) {
+            const user = await User.findOne({ email: identifier });
+            if (!user) return res.status(404).json({ msg: 'User with this email not found' });
+            if (!user.phone) return res.status(400).json({ msg: 'No WhatsApp number registered for this account' });
+            targetPhone = user.phone;
         } else {
-            return res.status(400).json({ msg: 'Invalid OTP type' });
+            targetPhone = identifier; // Identifier is already the phone number
         }
 
-        res.json({ msg: 'OTP sent successfully' });
+        console.log(`[OTP] Routing OTP to WhatsApp for: ${identifier} (Phone: ${targetPhone})`);
+        await sendWhatsAppOTP(identifier, targetPhone);
+        
+        res.json({ msg: 'Verification code sent to your WhatsApp' });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ msg: 'Failed to send OTP', error: err.message });
+        console.error("OTP Route Error:", err.message);
+        res.status(500).json({ msg: 'Failed to send WhatsApp OTP', error: err.message });
     }
 });
 
@@ -276,27 +272,15 @@ router.post('/register', async (req, res) => {
             await logAudit(req, 'USER_REGISTERED', 'AUTH', `User ${email} registered with role ${isFirstUser ? 'admin' : 'voter'}. Status: ${user.status}`);
         }
 
-        // Send Registration Confirmation Email
-        // We don't await this so the user gets an immediate response
-        const { sendEmail } = require('../services/otpService');
-        const subject = `eVoter Registration Received: ${user.formNumber}`;
-        const text = `Hello ${user.name},\n\nYour voter registration has been successfully received.\n\n` +
-            `--- APPLICATION DETAILS ---\n` +
+        // Send Registration Confirmation via WhatsApp
+        const whatsAppMsg = `Hello ${user.name},\n\n` +
+            `Your voter registration has been successfully received.\n\n` +
             `Tracking Number: ${user.formNumber}\n` +
-            `Full Name: ${user.name}\n` +
-            `Roll Number: ${user.rollNumber}\n` +
-            `Department: ${user.department}\n` +
-            `Year: ${user.year}\n` +
-            `Email: ${user.email}\n` +
-            `Phone: ${user.phone}\n\n` +
-            `--- STATUS ---\n` +
-            `Current Status: ${user.status.toUpperCase()}\n\n` +
-            `You can track your application status at any time using the link below:\n` +
-            `${req.protocol}://${req.get('host')}/track?num=${user.formNumber}\n\n` +
-            `Please save this email for your records.`;
+            `Status: ${user.status.toUpperCase()}\n\n` +
+            `You can track your application at: ${req.protocol}://${req.get('host')}/track?num=${user.formNumber}`;
         
-        sendEmail(user.email, subject, text).catch(err => {
-            console.error("Async registration email failed:", err.message);
+        sendWhatsAppMessage(user.phone, whatsAppMsg).catch(err => {
+            console.error("Async registration WhatsApp failed:", err.message);
         });
 
         res.status(201).json({
@@ -594,13 +578,11 @@ router.post('/approve-voter/:id', auth, async (req, res) => {
             });
             await logAudit(req, 'APPROVE_VOTER', 'VOTER', `Approved voter with ID: ${req.params.id}`);
 
-            // Send Approval Email Asynchronously
-            const { sendEmail } = require('../services/otpService');
-            const sub = `eVoter Application: APPROVED`;
-            const body = `Hello ${user.name},\n\nYour voter application has been APPROVED by the election committee.\n\nYou can now log in to the portal and participate in active elections.\n\nPortal: ${req.protocol}://${req.get('host')}/login`;
+            // Send Approval via WhatsApp
+            const msg = `Hello ${user.name},\n\nYour voter application has been APPROVED! 🎉\n\nYou can now log in to the portal and participate in active elections.\n\nLogin here: ${req.protocol}://${req.get('host')}/login`;
             
-            sendEmail(user.email, sub, body).catch(err => {
-                console.error("Async approval email failed:", err.message);
+            sendWhatsAppMessage(user.phone, msg).catch(err => {
+                console.error("Async approval WhatsApp failed:", err.message);
             });
 
             res.json({ msg: 'Voter approved' });
@@ -618,17 +600,13 @@ router.post('/approve-voter/:id', auth, async (req, res) => {
 
             await logAudit(req, status === 'reject' ? 'REJECT_VOTER' : 'REMOVE_VOTER', 'VOTER', `Status: ${status}, Reason: ${reason || 'N/A'}, Voter: ${user.email}`);
 
-            // Send Rejection Email Asynchronously
-            const { sendEmail } = require('../services/otpService');
-            const sub = `eVoter Application: ${status === 'reject' ? 'Rejected' : 'Removed'}`;
-            const body = `Hello ${user.name},\n\nYour voter application has been ${status === 'reject' ? 'rejected' : 'removed by the admin'}.\n\n` +
+            // Send Rejection via WhatsApp
+            const msg = `Hello ${user.name},\n\nYour voter application has been ${status === 'reject' ? 'rejected' : 'removed'}.\n\n` +
                 `Reason: ${reason || 'Requirements not met'}\n\n` +
-                `If you believe this was an error or you need to correct your details, you can refill the registration form here:\n` +
-                `${req.protocol}://${req.get('host')}/register\n\n` +
-                `Please contact the election committee if you have any questions.`;
+                `If you believe this was an error, you can refill the form here: ${req.protocol}://${req.get('host')}/register`;
             
-            sendEmail(user.email, sub, body).catch(err => {
-                console.error("Async rejection email failed:", err.message);
+            sendWhatsAppMessage(user.phone, msg).catch(err => {
+                console.error("Async rejection WhatsApp failed:", err.message);
             });
 
             res.json({ msg: `Voter ${status === 'reject' ? 'rejected' : 'removed'}` });

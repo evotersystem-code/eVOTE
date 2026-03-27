@@ -281,14 +281,23 @@ router.post('/approve/:id', auth, async (req, res) => {
             const logAudit = require('../middleware/auditLog');
             await logAudit(req, 'REJECT_CANDIDATE', 'CANDIDATE', `Candidate ${req.params.id} rejected. Reason: ${reason}`);
 
-            // Send Email Notification
+            // Send WhatsApp Notification
             try {
-                const subject = `Electoral Commission: Candidate Application ${status === 'reject' ? 'Rejected' : 'Removed'}`;
-                const text = `Hello ${candidate.name},\n\nYour application for the position of ${candidate.position} has been ${status === 'reject' ? 'rejected' : 'removed by the commission'}.\n\nReason: ${reason || 'Requirements not met'}\n\nPlease contact the electoral panel if you have any questions.`;
-                const { sendEmail } = require('../services/otpService');
-                await sendEmail(candidate.email, subject, text);
-            } catch (emailErr) {
-                console.error("Failed to send candidate rejection email:", emailErr.message);
+                const text = `Electoral Commission: Your application for ${candidate.position} has been ${status === 'reject' ? 'rejected' : 'removed'}.\n\nReason: ${reason || 'Requirements not met'}`;
+                const { sendWhatsAppMessage, client } = require('../services/otpService');
+                
+                // Get user's phone if missing in candidate profile
+                let phone = candidate.phone;
+                if (!phone) {
+                    const u = await User.findOne({ name: candidate.name }).select('phone');
+                    phone = u ? u.phone : null;
+                }
+
+                if (phone) {
+                    await sendWhatsAppMessage(phone, text);
+                }
+            } catch (err) {
+                console.error("Failed to send candidate notification:", err.message);
             }
 
             res.json({ msg: `Candidate ${status === 'reject' ? 'rejected' : 'removed'}` });

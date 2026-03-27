@@ -3,7 +3,7 @@ const router = express.Router();
 const Election = require('../models/Election');
 const auth = require('../middleware/auth');
 const logAudit = require('../middleware/auditLog');
-const { sendEmail } = require('../services/otpService');
+const { sendWhatsAppMessage } = require('../services/otpService');
 const User = require('../models/User');
 
 // @route   POST /api/elections
@@ -105,12 +105,13 @@ router.patch('/status/:id', auth, async (req, res) => {
 
         // Automated Alerts: Notify voters when election starts
         if (status === 'active') {
-            const voters = await User.find({ role: 'voter', isApproved: true }).select('email');
-            const subject = `🗳️ Election Active: ${election.name}`;
-            const text = `The election "${election.name}" is now LIVE! Please visit the portal and cast your vote before the deadline.`;
+            const voters = await User.find({ role: 'voter', isApproved: true }).select('phone');
+            const text = `🗳️ Election Active: ${election.name}\n\nThe election is now LIVE! Please log in and cast your vote.`;
             
             voters.forEach(v => {
-                sendEmail(v.email, subject, text).catch(e => console.error(`Failed to notify ${v.email}:`, e.message));
+                if (v.phone) {
+                    sendWhatsAppMessage(v.phone, text).catch(e => console.error(`Failed to notify ${v.phone}:`, e.message));
+                }
             });
         }
 
@@ -192,12 +193,14 @@ router.post('/finalize/:id', auth, async (req, res) => {
 
         await logAudit(req, 'FINALIZE_ELECTION', 'ELECTION', `Finalized results for "${election.name}". Winners have been updated.`);
 
-        const voters = await User.find({ role: 'voter', isApproved: true }).select('email');
-        const subject = `📢 Election Results Published: ${election.name}`;
-        const text = `The results for "${election.name}" have been officially finalized. Visit the Results Dashboard to see the winners!`;
+        // Notify via WhatsApp
+        const voters = await User.find({ role: 'voter', isApproved: true }).select('phone');
+        const text = `📢 Election Results Published: ${election.name}\n\nThe results have been finalized. Visit the Results Dashboard to see the winners!`;
         
         voters.forEach(v => {
-            sendEmail(v.email, subject, text).catch(e => console.error(`Failed to notify ${v.email}:`, e.message));
+            if (v.phone) {
+                sendWhatsAppMessage(v.phone, text).catch(e => console.error(`Failed to notify ${v.phone}:`, e.message));
+            }
         });
 
         res.json({ msg: 'Election finalized and winners updated.' });
