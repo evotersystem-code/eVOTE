@@ -1218,7 +1218,7 @@ router.post('/update-prn', auth, async (req, res) => {
 // @access  Public
 router.get('/verify-voter/:id', async (req, res) => {
     try {
-        const user = await User.findById(req.params.id);
+        const user = await User.findById(req.params.id).populate('batchId');
         
         if (!user || user.role !== 'voter' || (user.status !== 'approved' && user.status !== 'verified')) {
             return res.status(404).json({ msg: 'Valid voter not found' });
@@ -1227,9 +1227,9 @@ router.get('/verify-voter/:id', async (req, res) => {
         res.json({
             name: user.name,
             department: user.department,
-            year: user.year,
+            year: user.calculateCurrentYear(),
             status: user.status,
-            photo: user.faceData,
+            photo: user.profilePhoto || user.faceData,
             rollNumber: user.rollNumber
         });
     } catch (err) {
