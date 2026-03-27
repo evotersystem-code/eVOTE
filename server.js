@@ -34,6 +34,9 @@ if (missing.length > 0) {
 
 const app = express();
 
+// Trust Railway's proxy for rate limiting to work correctly
+app.set('trust proxy', 1);
+
 // --- Performance & security Middleware ---
 const compression = require('compression');
 app.use(compression());
