@@ -69,8 +69,13 @@ const transporter = nodemailer.createTransport({
         pass: process.env.EMAIL_PASS
     },
     tls: {
-        rejectUnauthorized: false // Helps in Some environments
-    }
+        rejectUnauthorized: false
+    },
+    connectionTimeout: 15000, // 15 seconds
+    greetingTimeout: 15000,
+    socketTimeout: 30000,
+    debug: true, // Enable debug logging
+    logger: true // Use built-in logger to stdout
 });
 
 function generateOTP() {
@@ -138,8 +143,9 @@ async function sendEmailOTP(email) {
             text: `Your verification code is: ${code}. Valid for 10 minutes.`
         };
 
+        console.log(`[SMTP] Attempting to send OTP email to: ${email}...`);
         const info = await transporter.sendMail(mailOptions);
-        console.log(`Email OTP sent to ${email}: ${info.response}`);
+        console.log(`[SMTP] SUCCESS: Email OTP sent to ${email}: ${info.response}`);
         return code;
     } catch (err) {
         console.error("Email Send Error:", err.message);
@@ -169,8 +175,9 @@ async function sendEmail(to, subject, text) {
             subject,
             text
         };
+        console.log(`[SMTP] Attempting to send general email to: ${to}...`);
         const info = await transporter.sendMail(mailOptions);
-        console.log(`Email sent to ${to}: ${info.response}`);
+        console.log(`[SMTP] SUCCESS: General email sent to ${to}: ${info.response}`);
         return info;
     } catch (err) {
         console.error("Email Send Error:", err.message);
