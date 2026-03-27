@@ -10,7 +10,7 @@ const path = require('path');
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
-        // No executablePath needed: npx puppeteer install handles this
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable',
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
