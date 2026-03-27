@@ -127,6 +127,23 @@ async function verifyOTP(identifier, code) {
     return true;
 }
 
+async function sendWhatsAppMessage(phone, message) {
+    try {
+        let cleanNumber = phone.replace(/\D/g, '');
+        if (cleanNumber.length === 11 && cleanNumber.startsWith('0')) cleanNumber = cleanNumber.substring(1);
+        if (cleanNumber.length === 10) cleanNumber = '91' + cleanNumber;
+        const formattedNumber = `${cleanNumber}@c.us`;
+
+        console.log(`[WhatsApp] Attempting to send message to: ${formattedNumber}`);
+        await client.sendMessage(formattedNumber, message);
+        console.log(`[WhatsApp] Message sent successfully to ${phone}`);
+        return true;
+    } catch (err) {
+        console.error("WhatsApp Message Error:", err.message);
+        return false;
+    }
+}
+
 // Export is already handled below
 
 module.exports = {
