@@ -1,6 +1,9 @@
 [phases.setup]
-nixPkgs = ["...", "nodejs", "chromium"]
+nixPkgs = ["...", "nodejs"]
 aptPkgs = [
+    "wget", 
+    "gnupg", 
+    "ca-certificates",
     "libnss3",
     "libnspr4",
     "libatk1.0-0",
@@ -22,7 +25,7 @@ aptPkgs = [
 ]
 
 [phases.build]
-cmds = ["npm install", "npm run build --if-present"]
+cmds = ["npm install", "npx puppeteer install", "npm run build --if-present"]
 
 [variables]
 NODE_ENV = "production"

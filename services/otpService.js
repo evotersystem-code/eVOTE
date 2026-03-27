@@ -10,7 +10,7 @@ const path = require('path');
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
-        // executablePath: '/usr/bin/google-chrome', // Removed to let Puppeteer find Chromium in Nixpacks
+        // No executablePath needed: npx puppeteer install handles this
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
