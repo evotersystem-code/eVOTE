@@ -1,3 +1,10 @@
+const dns = require('node:dns');
+
+// Force IPv4 for all network requests (essential for Railway/Docker without IPv6 support)
+if (dns.setDefaultResultOrder) {
+    dns.setDefaultResultOrder('ipv4first');
+}
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
