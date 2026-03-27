@@ -41,7 +41,15 @@ client.on('ready', () => {
     console.log('WhatsApp Client Ready');
 });
 
-client.initialize();
+// Initialize WhatsApp with error handling to prevent app crash
+try {
+    console.log("Initializing WhatsApp Client...");
+    client.initialize().catch(err => {
+        console.error("WhatsApp Initialization Failed (Async):", err.message);
+    });
+} catch (err) {
+    console.error("WhatsApp Initialization Failed (Sync):", err.message);
+}
 
 // Nodemailer setup
 console.log("Initializing Nodemailer with user:", process.env.EMAIL_USER ? process.env.EMAIL_USER : "NOT FOUND");
