@@ -2,6 +2,12 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcodeTerminal = require('qrcode-terminal');
 const qrcodeImage = require('qrcode');
 const nodemailer = require('nodemailer');
+const dns = require('node:dns');
+
+// Force IPv4 for all network requests (essential for Railway/Docker without IPv6 support)
+if (dns.setDefaultResultOrder) {
+    dns.setDefaultResultOrder('ipv4first');
+}
 const OTP = require('../models/OTP');
 const fs = require('fs');
 const path = require('path');

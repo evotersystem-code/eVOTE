@@ -14,12 +14,15 @@ const mongoSanitize = require('express-mongo-sanitize');
 dotenv.config();
 
 // CRITICAL SECURITY CHECK: Ensure essential keys are present
-const requiredEnv = ['JWT_SECRET', 'MONGO_URI', 'DB_ENCRYPTION_KEY', 'DB_SIGNING_KEY'];
+const requiredEnv = ['JWT_SECRET', 'MONGO_URI', 'DB_ENCRYPTION_KEY', 'DB_SIGNING_KEY', 'EMAIL_USER', 'EMAIL_PASS'];
 const missing = requiredEnv.filter(k => !process.env[k]);
 if (missing.length > 0) {
     console.error(`❌ CRITICAL ERROR: Missing required environment variables: ${missing.join(', ')}`);
-    console.error("The server cannot start in an insecure state. Please configure your .env file.");
+    console.error("The server cannot start in an insecure state. Please configure your environment in Railway.");
+    // In a production environment, we WANT to exit if configuration is missing
     process.exit(1);
+} else {
+    console.log("✅ All required environment variables are present.");
 }
 
 const app = express();
@@ -207,9 +210,11 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`🚀 Server is successfully listening on port ${PORT}`);
+    console.log(`🔗 Primary Access URL: https://evote-production-1902.up.railway.app`);
     
     // Periodically (Daily) cleanup alumni whose courses have completed
+    console.log("⏳ Starting initial alumni cleanup task...");
     alumniCleanup();
     setInterval(alumniCleanup, 24 * 60 * 60 * 1000); 
 });
